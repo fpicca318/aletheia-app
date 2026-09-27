@@ -1,0 +1,3046 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AletheIA — metodo P.O.R.T.A.</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>" />
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { background: #FAF6F0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {
+  useState,
+  useEffect,
+  useRef
+} = React;
+
+/* ---------------------------------------------------------
+   ICONE (SVG inline, generate da Lucide, nessuna dipendenza esterna)
+--------------------------------------------------------- */
+const ICON_PATHS = {
+  Compass: `<circle cx="12" cy="12" r="10" /><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />`,
+  Bot: `<path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" />`,
+  SearchCheck: `<path d="m8 11 2 2 4-4" /><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />`,
+  Sparkles: `<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" /><path d="M20 2v4" /><path d="M22 4h-4" /><circle cx="4" cy="20" r="2" />`,
+  MessageCircle: `<path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" />`,
+  PawPrint: `<circle cx="11" cy="4" r="2" /><circle cx="18" cy="8" r="2" /><circle cx="20" cy="16" r="2" /><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" />`,
+  Zap: `<path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" />`,
+  Rocket: `<path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /><path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" />`,
+  Trophy: `<path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2" /><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2" /><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3" /><path d="M4 22h16" /><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" /><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3" />`,
+  Music: `<path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />`,
+  ArrowRight: `<path d="M5 12h14" /><path d="m12 5 7 7-7 7" />`,
+  ArrowLeft: `<path d="m12 19-7-7 7-7" /><path d="M19 12H5" />`,
+  Check: `<path d="M20 6 9 17l-5-5" />`,
+  X: `<path d="M18 6 6 18" /><path d="m6 6 12 12" />`,
+  Copy: `<rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />`,
+  RotateCcw: `<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />`,
+  Lightbulb: `<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /><path d="M9 18h6" /><path d="M10 22h4" />`,
+  GraduationCap: `<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /><path d="M22 10v6" /><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />`,
+  Bug: `<path d="M12 20v-9" /><path d="M14 7a4 4 0 0 1 4 4v3a6 6 0 0 1-12 0v-3a4 4 0 0 1 4-4z" /><path d="M14.12 3.88 16 2" /><path d="M21 21a4 4 0 0 0-3.81-4" /><path d="M21 5a4 4 0 0 1-3.55 3.97" /><path d="M22 13h-4" /><path d="M3 21a4 4 0 0 1 3.81-4" /><path d="M3 5a4 4 0 0 0 3.55 3.97" /><path d="M6 13H2" /><path d="m8 2 1.88 1.88" /><path d="M9 7.13V6a3 3 0 1 1 6 0v1.13" />`,
+  Shuffle: `<path d="m18 14 4 4-4 4" /><path d="m18 2 4 4-4 4" /><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22" /><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2" /><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45" />`,
+  PenLine: `<path d="M13 21h8" /><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />`,
+  Send: `<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" /><path d="m21.854 2.147-10.94 10.939" />`
+};
+function makeIcon(inner) {
+  return function IconComp({
+    size = 24,
+    color = "currentColor",
+    strokeWidth = 2,
+    style,
+    className
+  }) {
+    return /*#__PURE__*/React.createElement("svg", {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: color,
+      strokeWidth: strokeWidth,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      style: style,
+      className: className,
+      dangerouslySetInnerHTML: {
+        __html: inner
+      }
+    });
+  };
+}
+const Compass = makeIcon(ICON_PATHS.Compass);
+const Bot = makeIcon(ICON_PATHS.Bot);
+const SearchCheck = makeIcon(ICON_PATHS.SearchCheck);
+const Sparkles = makeIcon(ICON_PATHS.Sparkles);
+const MessageCircle = makeIcon(ICON_PATHS.MessageCircle);
+const PawPrint = makeIcon(ICON_PATHS.PawPrint);
+const Zap = makeIcon(ICON_PATHS.Zap);
+const Rocket = makeIcon(ICON_PATHS.Rocket);
+const Trophy = makeIcon(ICON_PATHS.Trophy);
+const Music = makeIcon(ICON_PATHS.Music);
+const ArrowRight = makeIcon(ICON_PATHS.ArrowRight);
+const ArrowLeft = makeIcon(ICON_PATHS.ArrowLeft);
+const Check = makeIcon(ICON_PATHS.Check);
+const X = makeIcon(ICON_PATHS.X);
+const Copy = makeIcon(ICON_PATHS.Copy);
+const RotateCcw = makeIcon(ICON_PATHS.RotateCcw);
+const Lightbulb = makeIcon(ICON_PATHS.Lightbulb);
+const GraduationCap = makeIcon(ICON_PATHS.GraduationCap);
+const Bug = makeIcon(ICON_PATHS.Bug);
+const Shuffle = makeIcon(ICON_PATHS.Shuffle);
+const PenLine = makeIcon(ICON_PATHS.PenLine);
+const Send = makeIcon(ICON_PATHS.Send);
+
+/* ---------------------------------------------------------
+   TOKENS
+--------------------------------------------------------- */
+const COLORS = {
+  cream: "#FAF6F0",
+  card: "#FFFFFF",
+  dustBlue: "#A9C6D8",
+  sage: "#A9C2A0",
+  lavender: "#C7B8DE",
+  peach: "#F3D9C4",
+  warmGray: "#5B554E",
+  warmGrayLight: "#93897C",
+  line: "#E9E2D6"
+};
+const STEP_META = [{
+  key: "pianifica",
+  label: "Pianifica",
+  icon: Compass,
+  color: COLORS.dustBlue
+}, {
+  key: "orchestra",
+  label: "Orchestra",
+  icon: Bot,
+  color: COLORS.lavender
+}, {
+  key: "verifica",
+  label: "Riscontra",
+  icon: SearchCheck,
+  color: COLORS.sage
+}, {
+  key: "trasforma",
+  label: "Trasforma",
+  icon: Sparkles,
+  color: COLORS.peach
+}, {
+  key: "rifletti",
+  label: "Argomenta",
+  icon: MessageCircle,
+  color: COLORS.dustBlue
+}];
+const DECISION_LABELS = {
+  utilizzo: "Utilizzo",
+  parziale: "Utilizzo in parte",
+  modifico: "Modifico",
+  rifiuto: "Rifiuto"
+};
+
+// Accorcia un testo lungo per le anteprime, senza spezzare a metà parola quando possibile
+function truncate(str, max = 70) {
+  if (!str) return "";
+  const s = str.trim();
+  if (s.length <= max) return s;
+  return s.slice(0, max).replace(/\s+\S*$/, "") + "…";
+}
+
+/* Gruppi di nickname assegnabili dal docente. Ogni gruppo ha un'icona
+   rappresentativa (ripresa dalle tappe P.O.R.T.A.) e un elenco di nomi
+   tra cui lo studente può scegliere. Nickname e icona compaiono poi
+   nella scheda conclusiva. */
+const NICKNAME_GROUPS = [{
+  key: "esploratori",
+  label: "Esploratori",
+  icon: Compass,
+  color: COLORS.dustBlue,
+  names: [{
+    name: "Bussola",
+    emoji: "🧭"
+  }, {
+    name: "Mappa",
+    emoji: "🗺️"
+  }, {
+    name: "Sentiero",
+    emoji: "🥾"
+  }, {
+    name: "Rotta",
+    emoji: "⛵"
+  }, {
+    name: "Vento",
+    emoji: "🍃"
+  }, {
+    name: "Vulcano",
+    emoji: "🌋"
+  }, {
+    name: "Faro",
+    emoji: "🗼"
+  }, {
+    name: "Stella Polare",
+    emoji: "⭐"
+  }, {
+    name: "Orizzonte",
+    emoji: "🌅"
+  }, {
+    name: "Deserto",
+    emoji: "🏜️"
+  }]
+}, {
+  key: "orchestratori",
+  label: "Orchestratori",
+  icon: Bot,
+  color: COLORS.lavender,
+  names: [{
+    name: "Direttore",
+    emoji: "🎼"
+  }, {
+    name: "Regista",
+    emoji: "🎬"
+  }, {
+    name: "Maestro",
+    emoji: "🎻"
+  }, {
+    name: "Timoniere",
+    emoji: "⚓"
+  }, {
+    name: "Accordatore",
+    emoji: "🎹"
+  }, {
+    name: "Coreografo",
+    emoji: "💃"
+  }, {
+    name: "Produttore",
+    emoji: "🎚️"
+  }, {
+    name: "Capitano",
+    emoji: "🧑‍✈️"
+  }, {
+    name: "Stratega",
+    emoji: "♟️"
+  }, {
+    name: "Architetto",
+    emoji: "📐"
+  }]
+}, {
+  key: "investigatori",
+  label: "Investigatori",
+  icon: SearchCheck,
+  color: COLORS.sage,
+  names: [{
+    name: "Detective",
+    emoji: "🕵️"
+  }, {
+    name: "Lente",
+    emoji: "🔍"
+  }, {
+    name: "Segugio",
+    emoji: "🐾"
+  }, {
+    name: "Indagatore",
+    emoji: "📋"
+  }, {
+    name: "Indizio",
+    emoji: "🧩"
+  }, {
+    name: "Enigma",
+    emoji: "❓"
+  }, {
+    name: "Traccia",
+    emoji: "👣"
+  }, {
+    name: "Codice",
+    emoji: "🔐"
+  }, {
+    name: "Mistero",
+    emoji: "🗝️"
+  }, {
+    name: "Scanner",
+    emoji: "📡"
+  }]
+}, {
+  key: "artigiani",
+  label: "Artigiani",
+  icon: Sparkles,
+  color: COLORS.peach,
+  names: [{
+    name: "Scultore",
+    emoji: "🗿"
+  }, {
+    name: "Alchimista",
+    emoji: "⚗️"
+  }, {
+    name: "Fabbro",
+    emoji: "🔨"
+  }, {
+    name: "Tessitore",
+    emoji: "🧵"
+  }, {
+    name: "Orafo",
+    emoji: "💍"
+  }, {
+    name: "Vasaio",
+    emoji: "🏺"
+  }, {
+    name: "Falegname",
+    emoji: "🪚"
+  }, {
+    name: "Sarto",
+    emoji: "🪡"
+  }, {
+    name: "Orologiaio",
+    emoji: "⏱️"
+  }, {
+    name: "Vetraio",
+    emoji: "🪟"
+  }]
+}, {
+  key: "filosofi",
+  label: "Filosofi",
+  icon: MessageCircle,
+  color: COLORS.dustBlue,
+  names: [{
+    name: "Saggio",
+    emoji: "🧙"
+  }, {
+    name: "Oracolo",
+    emoji: "🔮"
+  }, {
+    name: "Pensatore",
+    emoji: "🤔"
+  }, {
+    name: "Visionario",
+    emoji: "👁️"
+  }, {
+    name: "Sofista",
+    emoji: "📜"
+  }, {
+    name: "Stoico",
+    emoji: "🏛️"
+  }, {
+    name: "Retore",
+    emoji: "🎙️"
+  }, {
+    name: "Dialettico",
+    emoji: "💬"
+  }, {
+    name: "Contemplativo",
+    emoji: "🌙"
+  }, {
+    name: "Umanista",
+    emoji: "📚"
+  }]
+}, {
+  key: "animali",
+  label: "Animali",
+  icon: PawPrint,
+  color: COLORS.sage,
+  names: [{
+    name: "Lupo",
+    emoji: "🐺"
+  }, {
+    name: "Aquila",
+    emoji: "🦅"
+  }, {
+    name: "Volpe",
+    emoji: "🦊"
+  }, {
+    name: "Delfino",
+    emoji: "🐬"
+  }, {
+    name: "Leone",
+    emoji: "🦁"
+  }, {
+    name: "Tigre",
+    emoji: "🐯"
+  }, {
+    name: "Panda",
+    emoji: "🐼"
+  }, {
+    name: "Gufo",
+    emoji: "🦉"
+  }, {
+    name: "Orso",
+    emoji: "🐻"
+  }, {
+    name: "Falco",
+    emoji: "🐦"
+  }]
+}, {
+  key: "supereroi",
+  label: "Supereroi",
+  icon: Zap,
+  color: COLORS.lavender,
+  names: [{
+    name: "Fulmine",
+    emoji: "⚡"
+  }, {
+    name: "Scudo",
+    emoji: "🛡️"
+  }, {
+    name: "Mantello",
+    emoji: "🦸"
+  }, {
+    name: "Maschera",
+    emoji: "🎭"
+  }, {
+    name: "Titano",
+    emoji: "💥"
+  }, {
+    name: "Fenice",
+    emoji: "🔥"
+  }, {
+    name: "Ombra",
+    emoji: "🌑"
+  }, {
+    name: "Vendicatore",
+    emoji: "⚔️"
+  }, {
+    name: "Guardiano",
+    emoji: "🐉"
+  }, {
+    name: "Cometa",
+    emoji: "☄️"
+  }]
+}, {
+  key: "astronauti",
+  label: "Astronauti",
+  icon: Rocket,
+  color: COLORS.dustBlue,
+  names: [{
+    name: "Razzo",
+    emoji: "🚀"
+  }, {
+    name: "Satellite",
+    emoji: "🛰️"
+  }, {
+    name: "Luna",
+    emoji: "🌙"
+  }, {
+    name: "Pianeta",
+    emoji: "🪐"
+  }, {
+    name: "Galassia",
+    emoji: "🌌"
+  }, {
+    name: "Meteora",
+    emoji: "🌠"
+  }, {
+    name: "Astro",
+    emoji: "🌟"
+  }, {
+    name: "Ufo",
+    emoji: "🛸"
+  }, {
+    name: "Costellazione",
+    emoji: "✨"
+  }, {
+    name: "Nebulosa",
+    emoji: "🌫️"
+  }]
+}, {
+  key: "sportivi",
+  label: "Sportivi",
+  icon: Trophy,
+  color: COLORS.peach,
+  names: [{
+    name: "Campione",
+    emoji: "🏆"
+  }, {
+    name: "Pallone",
+    emoji: "⚽"
+  }, {
+    name: "Canestro",
+    emoji: "🏀"
+  }, {
+    name: "Racchetta",
+    emoji: "🎾"
+  }, {
+    name: "Medaglia",
+    emoji: "🥇"
+  }, {
+    name: "Ciclista",
+    emoji: "🚴"
+  }, {
+    name: "Nuotatore",
+    emoji: "🏊"
+  }, {
+    name: "Traguardo",
+    emoji: "🏁"
+  }, {
+    name: "Maratoneta",
+    emoji: "🏃"
+  }, {
+    name: "Arrampicatore",
+    emoji: "🧗"
+  }]
+}, {
+  key: "musicisti",
+  label: "Musicisti",
+  icon: Music,
+  color: COLORS.sage,
+  names: [{
+    name: "Nota",
+    emoji: "🎵"
+  }, {
+    name: "Chitarra",
+    emoji: "🎸"
+  }, {
+    name: "Batteria",
+    emoji: "🥁"
+  }, {
+    name: "Microfono",
+    emoji: "🎤"
+  }, {
+    name: "Violinista",
+    emoji: "🎻"
+  }, {
+    name: "Tromba",
+    emoji: "🎺"
+  }, {
+    name: "Sassofono",
+    emoji: "🎷"
+  }, {
+    name: "DJ",
+    emoji: "🎧"
+  }, {
+    name: "Cantante",
+    emoji: "🎙️"
+  }, {
+    name: "Compositore",
+    emoji: "🎶"
+  }]
+}];
+
+// Trova l'emoji associata a un nickname all'interno del suo gruppo
+function getNicknameEmoji(groupKey, name) {
+  const g = NICKNAME_GROUPS.find(gr => gr.key === groupKey);
+  return g?.names.find(n => n.name === name)?.emoji || null;
+}
+const TIPS = ["Pensa prima di chiedere.", "Non accettare automaticamente la prima risposta.", "Una risposta convincente può comunque contenere errori.", "Verificare è parte del lavoro.", "Se correggi l'IA, stai dimostrando pensiero critico.", "Non conta quanti prompt utilizzi. Conta come prendi le decisioni.", "Il prodotto finale racconta cosa hai fatto. Il percorso racconta come hai imparato."];
+const AIUTO_OPTIONS = ["Capire meglio la consegna", "Avere idee", "Ricevere una spiegazione", "Trovare una strategia", "Controllare il mio lavoro", "Correggere", "Tradurre", "Scrivere o rielaborare", "Programmare", "Altro"];
+const CONTROLLO_OPTIONS = ["Ho rifatto il ragionamento", "Ho rifatto i calcoli", "Ho confrontato con il libro", "Ho consultato una fonte affidabile", "Ho confrontato con gli appunti", "Ho eseguito il codice", "Ho confrontato con un'altra soluzione", "Ho chiesto una seconda spiegazione", "Non ho ancora verificato"];
+const SUGGESTION_CARDS = [{
+  icon: Lightbulb,
+  title: "Idee",
+  prompt: "Chiedimi di aiutarti a trovare possibili strategie.",
+  color: COLORS.peach
+}, {
+  icon: GraduationCap,
+  title: "Spiegazione",
+  prompt: "Chiedimi di spiegare un concetto in modo semplice.",
+  color: COLORS.dustBlue
+}, {
+  icon: SearchCheck,
+  title: "Controllo",
+  prompt: "Chiedimi di controllare il mio ragionamento.",
+  color: COLORS.sage
+}, {
+  icon: Bug,
+  title: "Errore",
+  prompt: "Chiedimi di aiutarti a trovare un errore.",
+  color: COLORS.lavender
+}, {
+  icon: Shuffle,
+  title: "Alternative",
+  prompt: "Chiedimi di proporti un altro modo per affrontare il problema.",
+  color: COLORS.peach
+}, {
+  icon: PenLine,
+  title: "Rielaborazione",
+  prompt: "Chiedimi di migliorare qualcosa che hai già prodotto.",
+  color: COLORS.sage
+}];
+const LEVELS = [{
+  n: 1,
+  title: "Delego",
+  desc: "Lascio che l'IA faccia il lavoro."
+}, {
+  n: 2,
+  title: "Utilizzo",
+  desc: "Uso l'IA per ottenere aiuto."
+}, {
+  n: 3,
+  title: "Collaboro",
+  desc: "Uso l'IA, verifico e correggo."
+}, {
+  n: 4,
+  title: "Orchestro",
+  desc: "Guido l'IA, verifico, confronto e rielaboro."
+}];
+const DOMAIN_META = [{
+  key: "matematica",
+  label: "Ambito matematico",
+  icon: "➗",
+  color: COLORS.dustBlue
+}, {
+  key: "tecnico_scientifico",
+  label: "Tecnico scientifico",
+  icon: "🧪",
+  color: COLORS.sage
+}, {
+  key: "linguistico",
+  label: "Linguistico",
+  icon: "🗣️",
+  color: COLORS.lavender
+}, {
+  key: "storico_letterario",
+  label: "Storico letterario",
+  icon: "📜",
+  color: COLORS.peach
+}, {
+  key: "informatica",
+  label: "Informatica",
+  icon: "💻",
+  color: COLORS.dustBlue
+}];
+const DEMO_SETS = {
+  matematica: [{
+    nickname: {
+      group: "investigatori",
+      name: "Lente"
+    },
+    pianifica: {
+      cosaDevoFare: "Risolvere tre equazioni di secondo grado e verificare le soluzioni.",
+      cosaVieneChiesto: "Trovare le radici usando la formula risolutiva e controllare il discriminante.",
+      cosaSoGia: "Conosco la formula risolutiva ma faccio spesso errori di calcolo con i segni.",
+      comeProcedere: "Provo a risolvere da sola le prime due, poi controllo il procedimento con l'IA.",
+      aiuto: ["Controllare il mio lavoro", "Correggere"],
+      personale: "Voglio scrivere da sola tutti i passaggi, non solo il risultato finale."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA di controllare il procedimento della seconda equazione.",
+      perche: "Il discriminante mi risultava negativo e non ero sicura fosse corretto.",
+      risposta: "L'IA ha confermato il discriminante negativo, spiegando che l'equazione non ha soluzioni reali.",
+      decisione: "utilizzo",
+      motivo: "Il procedimento indicato coincideva con il mio e la spiegazione era chiara."
+    },
+    verifica: {
+      fiducia: "Molto",
+      controllo: ["Ho rifatto i calcoli", "Ho confrontato con il libro"],
+      trovato: "no",
+      cosaTrovato: "",
+      accorto: "",
+      corretto: ""
+    },
+    trasforma: {
+      tenuto: "La conferma sul discriminante negativo.",
+      cambiato: "Ho riscritto la spiegazione del perché non esistono soluzioni reali con parole mie.",
+      eliminato: "Nessuna parte, il controllo era corretto.",
+      risultato: "Tre equazioni risolte con procedimento completo e verifica del discriminante."
+    },
+    rifletti: {
+      autonoma: "Ho risolto da sola la prima e la terza equazione.",
+      momentoUtile: "Quando dovevo controllare un calcolo che mi sembrava sbagliato.",
+      rifiutato: "No, questa volta la risposta dell'IA era corretta.",
+      decisione: "Controllare comunque tutti i calcoli anche quando l'IA conferma.",
+      imparato: "Che il discriminante negativo ha un significato preciso, non è solo un errore.",
+      diverso: "Proverei a calcolare il discriminante mentalmente prima di scrivere i passaggi."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho usato l'IA per controllare, ma ho verificato comunque ogni calcolo."
+    }
+  }, {
+    nickname: {
+      group: "artigiani",
+      name: "Scultore"
+    },
+    pianifica: {
+      cosaDevoFare: "Calcolare l'area di una figura composta da un rettangolo e un triangolo.",
+      cosaVieneChiesto: "Trovare l'area totale scomponendo la figura in forme note.",
+      cosaSoGia: "Conosco le formule per area del rettangolo e del triangolo.",
+      comeProcedere: "Disegno la figura, la scompongo e sommo le due aree.",
+      aiuto: ["Trovare una strategia", "Controllare il mio lavoro"],
+      personale: "Voglio fare io il disegno e la scomposizione della figura."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA se la mia scomposizione della figura fosse corretta.",
+      perche: "Non ero sicuro di aver diviso la figura nel modo più semplice.",
+      risposta: "L'IA ha proposto la stessa scomposizione ma anche un'alternativa con un trapezio.",
+      decisione: "parziale",
+      motivo: "Ho tenuto la mia scomposizione perché la trovavo più chiara, ma ho letto l'alternativa per curiosità."
+    },
+    verifica: {
+      fiducia: "Abbastanza",
+      controllo: ["Ho rifatto il ragionamento", "Ho confrontato con gli appunti"],
+      trovato: "si",
+      cosaTrovato: "Un'unità di misura scritta in modo diverso da quella richiesta dal problema.",
+      accorto: "Il risultato non tornava con le misure del problema originale.",
+      corretto: "Ho riconvertito l'unità di misura corretta prima di calcolare l'area finale."
+    },
+    trasforma: {
+      tenuto: "La scomposizione in rettangolo e triangolo.",
+      cambiato: "L'unità di misura, che ho corretto.",
+      eliminato: "L'alternativa con il trapezio, non l'ho utilizzata.",
+      risultato: "Area totale calcolata correttamente con scomposizione e unità di misura verificate."
+    },
+    rifletti: {
+      autonoma: "Ho fatto io il disegno, la scomposizione e i calcoli finali.",
+      momentoUtile: "Quando dovevo confermare se la mia scomposizione fosse la più semplice.",
+      rifiutato: "Sì, ho corretto l'unità di misura sbagliata.",
+      decisione: "Ricontrollare sempre le unità di misura prima di concludere.",
+      imparato: "Che un errore piccolo, come l'unità di misura, può cambiare tutto il risultato.",
+      diverso: "Controllerei le unità di misura fin dall'inizio, non solo alla fine."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho verificato con attenzione e corretto un errore che avrei potuto non notare."
+    }
+  }],
+  tecnico_scientifico: [{
+    nickname: {
+      group: "investigatori",
+      name: "Indizio"
+    },
+    pianifica: {
+      cosaDevoFare: "Descrivere l'esperimento di caduta libera e calcolare il tempo di caduta.",
+      cosaVieneChiesto: "Spiegare la legge del moto e calcolare il tempo per un'altezza data.",
+      cosaSoGia: "Conosco la formula h = 1/2 g t² ma non sono sicura di come isolare t.",
+      comeProcedere: "Provo a isolare la formula da sola, poi chiedo conferma del passaggio algebrico.",
+      aiuto: ["Ricevere una spiegazione", "Controllare il mio lavoro"],
+      personale: "Voglio scrivere da sola la parte descrittiva dell'esperimento."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA di spiegare come isolare t nella formula h = 1/2 g t².",
+      perche: "Non ricordavo bene i passaggi per la radice quadrata.",
+      risposta: "L'IA ha mostrato i passaggi algebrici e il risultato finale con la radice quadrata.",
+      decisione: "utilizzo",
+      motivo: "Il procedimento era chiaro e corrispondeva a quello che ricordavo dalle lezioni."
+    },
+    verifica: {
+      fiducia: "Molto",
+      controllo: ["Ho rifatto i calcoli", "Ho confrontato con il libro"],
+      trovato: "no",
+      cosaTrovato: "",
+      accorto: "",
+      corretto: ""
+    },
+    trasforma: {
+      tenuto: "Il procedimento algebrico per isolare t.",
+      cambiato: "Ho aggiunto le unità di misura mancanti nei passaggi.",
+      eliminato: "Nessuna parte.",
+      risultato: "Relazione con descrizione dell'esperimento, formula isolata e calcolo del tempo di caduta."
+    },
+    rifletti: {
+      autonoma: "Ho scritto la descrizione dell'esperimento e le conclusioni.",
+      momentoUtile: "Quando dovevo ricordare i passaggi algebrici per isolare la variabile.",
+      rifiutato: "No, in questo caso la spiegazione era corretta e completa.",
+      decisione: "Aggiungere sempre le unità di misura nei passaggi, non solo nel risultato.",
+      imparato: "Che capire un passaggio algebrico è diverso dal saperlo solo copiare.",
+      diverso: "Proverei a isolare la formula da sola più a lungo prima di chiedere aiuto."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho chiesto una spiegazione mirata e ho verificato il risultato con i calcoli."
+    }
+  }, {
+    nickname: {
+      group: "artigiani",
+      name: "Alchimista"
+    },
+    pianifica: {
+      cosaDevoFare: "Relazionare su un esperimento di reazione tra acido e base.",
+      cosaVieneChiesto: "Descrivere la reazione, scrivere l'equazione bilanciata e le osservazioni.",
+      cosaSoGia: "So riconoscere acidi e basi ma ho difficoltà a bilanciare le equazioni.",
+      comeProcedere: "Scrivo le osservazioni da solo, poi chiedo aiuto solo per il bilanciamento.",
+      aiuto: ["Ricevere una spiegazione", "Correggere"],
+      personale: "Voglio descrivere io le osservazioni sperimentali."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA di controllare se avevo bilanciato correttamente l'equazione.",
+      perche: "Non ero sicuro dei coefficienti stechiometrici.",
+      risposta: "L'IA ha indicato un coefficiente sbagliato e ha mostrato come correggerlo.",
+      decisione: "modifico",
+      motivo: "Ho capito l'errore e ho corretto io stesso l'equazione, non l'ho solo copiata."
+    },
+    verifica: {
+      fiducia: "Abbastanza",
+      controllo: ["Ho rifatto il ragionamento", "Ho consultato una fonte affidabile"],
+      trovato: "si",
+      cosaTrovato: "Un coefficiente che non bilanciava correttamente gli atomi di idrogeno.",
+      accorto: "Contando gli atomi su entrambi i lati, il numero non corrispondeva.",
+      corretto: "Ho ricalcolato i coefficienti fino a bilanciare tutti gli elementi."
+    },
+    trasforma: {
+      tenuto: "La struttura generale della relazione e le osservazioni.",
+      cambiato: "L'equazione bilanciata, corretta dopo la verifica.",
+      eliminato: "Una spiegazione troppo tecnica che non capivo bene, l'ho semplificata.",
+      risultato: "Relazione completa con equazione bilanciata correttamente e osservazioni sperimentali."
+    },
+    rifletti: {
+      autonoma: "Ho scritto tutte le osservazioni sperimentali e l'introduzione.",
+      momentoUtile: "Quando dovevo controllare il bilanciamento dell'equazione.",
+      rifiutato: "Sì, ho dovuto correggere un coefficiente indicato inizialmente in modo poco chiaro.",
+      decisione: "Contare sempre gli atomi da solo prima di fidarmi del risultato.",
+      imparato: "Che bilanciare un'equazione richiede attenzione, non è solo un calcolo meccanico.",
+      diverso: "Chiederei di spiegare il procedimento passo passo, non solo il risultato finale."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho verificato l'equazione contando gli atomi e ho corretto l'errore da solo."
+    }
+  }],
+  linguistico: [{
+    nickname: {
+      group: "orchestratori",
+      name: "Direttore"
+    },
+    pianifica: {
+      cosaDevoFare: "Tradurre un breve testo dall'italiano all'inglese per l'esercizio di lingua.",
+      cosaVieneChiesto: "Una traduzione fedele al significato, non parola per parola.",
+      cosaSoGia: "Conosco il lessico di base ma ho dubbi sui tempi verbali.",
+      comeProcedere: "Traduco da sola una prima versione, poi controllo i tempi verbali.",
+      aiuto: ["Tradurre", "Controllare il mio lavoro"],
+      personale: "Voglio scegliere da sola il lessico e lo stile del testo."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA di controllare i tempi verbali della mia traduzione.",
+      perche: "Non ero sicura se usare il past simple o il present perfect in una frase.",
+      risposta: "L'IA ha spiegato la differenza e ha suggerito il present perfect per quel contesto.",
+      decisione: "utilizzo",
+      motivo: "La spiegazione mi ha aiutato a capire la regola, non solo a correggere la frase."
+    },
+    verifica: {
+      fiducia: "Abbastanza",
+      controllo: ["Ho confrontato con gli appunti", "Ho chiesto una seconda spiegazione"],
+      trovato: "no",
+      cosaTrovato: "",
+      accorto: "",
+      corretto: ""
+    },
+    trasforma: {
+      tenuto: "La struttura generale della mia traduzione e il lessico scelto.",
+      cambiato: "Il tempo verbale in due frasi, secondo la spiegazione ricevuta.",
+      eliminato: "Nessuna parte, ho solo corretto i tempi verbali.",
+      risultato: "Testo tradotto in inglese con tempi verbali corretti e lessico personale."
+    },
+    rifletti: {
+      autonoma: "Ho tradotto quasi tutto il testo da sola, tranne i due tempi verbali.",
+      momentoUtile: "Quando non ricordavo la differenza tra past simple e present perfect.",
+      rifiutato: "No, la spiegazione era corretta e utile.",
+      decisione: "Chiedere sempre il perché di una correzione, non solo la correzione.",
+      imparato: "Che il present perfect si usa per azioni collegate al presente.",
+      diverso: "Ripasserei i tempi verbali prima di iniziare la traduzione."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho chiesto una spiegazione mirata e ho verificato con i miei appunti."
+    }
+  }, {
+    nickname: {
+      group: "filosofi",
+      name: "Pensatore"
+    },
+    pianifica: {
+      cosaDevoFare: "Scrivere un breve commento su una poesia studiata in classe.",
+      cosaVieneChiesto: "Analizzare il tema principale e una figura retorica.",
+      cosaSoGia: "Riconosco alcune figure retoriche ma non sempre il loro effetto.",
+      comeProcedere: "Rileggo la poesia, individuo il tema da sola, poi chiedo aiuto sulle figure retoriche.",
+      aiuto: ["Ricevere una spiegazione", "Avere idee"],
+      personale: "Voglio scrivere da sola l'interpretazione del tema principale."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA di spiegarmi l'effetto di una metafora presente nella poesia.",
+      perche: "Capivo che era una metafora ma non il suo significato più profondo.",
+      risposta: "L'IA ha spiegato il significato della metafora collegandolo al tema della poesia.",
+      decisione: "modifico",
+      motivo: "Ho usato la spiegazione come base ma l'ho riscritta con parole più mie."
+    },
+    verifica: {
+      fiducia: "Abbastanza",
+      controllo: ["Ho confrontato con il libro", "Ho confrontato con gli appunti"],
+      trovato: "si",
+      cosaTrovato: "Un riferimento all'autore che non corrispondeva a quanto studiato in classe.",
+      accorto: "Il libro di testo riportava un'informazione biografica diversa.",
+      corretto: "Ho tolto il riferimento e ho usato solo le informazioni confermate dal libro."
+    },
+    trasforma: {
+      tenuto: "L'interpretazione della metafora, riscritta con parole mie.",
+      cambiato: "Ho tolto il riferimento biografico non confermato.",
+      eliminato: "Una frase troppo generica sul significato della poesia.",
+      risultato: "Commento di circa 250 parole con analisi del tema e della metafora principale."
+    },
+    rifletti: {
+      autonoma: "Ho individuato da sola il tema principale e ho scritto l'introduzione.",
+      momentoUtile: "Quando dovevo capire il significato più profondo della metafora.",
+      rifiutato: "Sì, ho tolto un'informazione biografica non corretta.",
+      decisione: "Verificare sempre i riferimenti biografici sul libro, non fidarmi subito.",
+      imparato: "Che una figura retorica va sempre collegata al significato generale del testo.",
+      diverso: "Controllerei subito le informazioni sull'autore prima di scriverle."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho verificato un'informazione e ho corretto un errore trovato nella risposta."
+    }
+  }],
+  storico_letterario: [{
+    nickname: {
+      group: "esploratori",
+      name: "Bussola"
+    },
+    pianifica: {
+      cosaDevoFare: "Scrivere una sintesi sulle cause del Rinascimento italiano.",
+      cosaVieneChiesto: "Spiegare almeno tre cause storiche e culturali del fenomeno.",
+      cosaSoGia: "So che è legato alla riscoperta dei classici, ma non conosco tutte le cause economiche.",
+      comeProcedere: "Scrivo le cause che conosco, poi chiedo aiuto per quelle economiche.",
+      aiuto: ["Capire meglio la consegna", "Avere idee"],
+      personale: "Voglio scrivere da solo l'introduzione e la conclusione."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA quali fossero le principali cause economiche del Rinascimento.",
+      perche: "Non conoscevo bene il ruolo delle banche e dei mercanti fiorentini.",
+      risposta: "L'IA ha indicato lo sviluppo del commercio e il ruolo delle famiglie di banchieri come i Medici.",
+      decisione: "parziale",
+      motivo: "Ho usato l'informazione sui Medici ma ho approfondito da solo con il libro di storia."
+    },
+    verifica: {
+      fiducia: "Abbastanza",
+      controllo: ["Ho confrontato con il libro", "Ho consultato una fonte affidabile"],
+      trovato: "no",
+      cosaTrovato: "",
+      accorto: "",
+      corretto: ""
+    },
+    trasforma: {
+      tenuto: "L'informazione sul ruolo dei Medici nell'economia fiorentina.",
+      cambiato: "Ho ampliato la spiegazione con dettagli trovati sul libro.",
+      eliminato: "Un riferimento troppo generico al commercio, sostituito con un esempio preciso.",
+      risultato: "Sintesi di circa 300 parole con tre cause storiche, culturali ed economiche."
+    },
+    rifletti: {
+      autonoma: "Ho scritto l'introduzione, la conclusione e la parte sulla riscoperta dei classici.",
+      momentoUtile: "Quando non conoscevo le cause economiche del fenomeno.",
+      rifiutato: "No, ma ho approfondito l'informazione ricevuta con altre fonti.",
+      decisione: "Approfondire sempre con il libro le informazioni ricevute dall'IA.",
+      imparato: "Che il Rinascimento ha cause economiche importanti quanto quelle culturali.",
+      diverso: "Cercherei prima sul libro e poi chiederei solo per completare."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho usato in parte l'aiuto ricevuto e l'ho approfondito con altre fonti."
+    }
+  }, {
+    nickname: {
+      group: "filosofi",
+      name: "Saggio"
+    },
+    pianifica: {
+      cosaDevoFare: "Analizzare il personaggio di Don Abbondio nei Promessi Sposi.",
+      cosaVieneChiesto: "Descrivere il carattere del personaggio con riferimenti al testo.",
+      cosaSoGia: "So che è un personaggio pauroso, ma ho pochi riferimenti precisi al testo.",
+      comeProcedere: "Rileggo i capitoli principali e scrivo le mie osservazioni prima di chiedere aiuto.",
+      aiuto: ["Avere idee", "Controllare il mio lavoro"],
+      personale: "Voglio scrivere da sola la descrizione generale del carattere."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA di aiutarmi a trovare un episodio del romanzo che rappresenti bene la sua paura.",
+      perche: "Ricordavo la scena dei bravi ma non i dettagli precisi.",
+      risposta: "L'IA ha ricordato la scena dell'incontro con i bravi nel primo capitolo, con alcuni dettagli.",
+      decisione: "utilizzo",
+      motivo: "Ho verificato l'episodio sul mio libro e i dettagli corrispondevano."
+    },
+    verifica: {
+      fiducia: "Molto",
+      controllo: ["Ho confrontato con il libro", "Ho rifatto il ragionamento"],
+      trovato: "no",
+      cosaTrovato: "",
+      accorto: "",
+      corretto: ""
+    },
+    trasforma: {
+      tenuto: "Il riferimento all'episodio dei bravi nel primo capitolo.",
+      cambiato: "Ho aggiunto una citazione precisa presa direttamente dal libro.",
+      eliminato: "Nessuna parte, l'episodio era corretto.",
+      risultato: "Analisi del personaggio con riferimento preciso al capitolo e alla scena dei bravi."
+    },
+    rifletti: {
+      autonoma: "Ho scritto la descrizione generale del carattere e il commento finale.",
+      momentoUtile: "Quando dovevo ricordare un episodio preciso del romanzo.",
+      rifiutato: "No, l'episodio indicato era corretto e utile.",
+      decisione: "Verificare sempre un episodio sul libro prima di usarlo nell'analisi.",
+      imparato: "Che un'analisi di un personaggio è più forte con riferimenti precisi al testo.",
+      diverso: "Cercherei prima io l'episodio nel libro e chiederei aiuto solo se non lo trovo."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho chiesto un aiuto mirato e ho verificato tutto sul libro prima di usarlo."
+    }
+  }],
+  informatica: [{
+    nickname: {
+      group: "artigiani",
+      name: "Fabbro"
+    },
+    pianifica: {
+      cosaDevoFare: "Scrivere un programma Python che calcola la media dei voti inseriti.",
+      cosaVieneChiesto: "Un programma che chiede i voti all'utente e restituisce la media.",
+      cosaSoGia: "So usare le variabili e i cicli semplici, ma ho dubbi sulle liste.",
+      comeProcedere: "Scrivo la struttura del programma da solo, poi chiedo aiuto sulla parte con le liste.",
+      aiuto: ["Programmare", "Correggere"],
+      personale: "Voglio scrivere da solo la parte che chiede i voti all'utente."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA come usare una lista per salvare più voti in Python.",
+      perche: "Non ricordavo bene la sintassi per aggiungere elementi a una lista.",
+      risposta: "L'IA ha mostrato come creare una lista vuota e aggiungere voti con append().",
+      decisione: "utilizzo",
+      motivo: "La sintassi era corretta e l'ho testata subito nel mio programma."
+    },
+    verifica: {
+      fiducia: "Molto",
+      controllo: ["Ho eseguito il codice", "Ho rifatto il ragionamento"],
+      trovato: "si",
+      cosaTrovato: "Un errore di indentazione che bloccava l'esecuzione del programma.",
+      accorto: "Il programma restituiva un errore di sintassi quando lo eseguivo.",
+      corretto: "Ho corretto l'indentazione della riga dentro il ciclo."
+    },
+    trasforma: {
+      tenuto: "L'uso della lista e della funzione append() per salvare i voti.",
+      cambiato: "L'indentazione del codice, corretta dopo l'errore trovato.",
+      eliminato: "Una variabile che avevo creato ma non utilizzavo più.",
+      risultato: "Programma Python funzionante che calcola la media dei voti inseriti dall'utente."
+    },
+    rifletti: {
+      autonoma: "Ho scritto da solo la richiesta dei voti e il calcolo finale della media.",
+      momentoUtile: "Quando non ricordavo come aggiungere elementi a una lista.",
+      rifiutato: "Sì, ho dovuto correggere un errore di indentazione nel codice.",
+      decisione: "Eseguire sempre il codice subito dopo ogni modifica, non solo alla fine.",
+      imparato: "Che un piccolo errore di indentazione può bloccare tutto il programma.",
+      diverso: "Testerei il codice più spesso durante la scrittura, non solo alla fine."
+    },
+    autovalutazione: {
+      livello: 3,
+      perche: "Ho eseguito il codice, trovato un errore e l'ho corretto da solo."
+    }
+  }, {
+    nickname: {
+      group: "esploratori",
+      name: "Mappa"
+    },
+    pianifica: {
+      cosaDevoFare: "Creare una semplice pagina HTML con titolo, testo e un'immagine.",
+      cosaVieneChiesto: "Una pagina web con struttura corretta e almeno due sezioni.",
+      cosaSoGia: "Conosco i tag principali ma ho dubbi su come inserire correttamente le immagini.",
+      comeProcedere: "Scrivo la struttura della pagina da sola, poi chiedo aiuto per l'immagine.",
+      aiuto: ["Programmare", "Ricevere una spiegazione"],
+      personale: "Voglio scrivere da sola tutto il testo della pagina."
+    },
+    orchestra: {
+      chiesto: "Ho chiesto all'IA come inserire correttamente un'immagine con il tag giusto.",
+      perche: "Non ricordavo se dovevo usare src o href per l'immagine.",
+      risposta: "L'IA ha spiegato che si usa il tag img con l'attributo src e ha fatto un esempio.",
+      decisione: "utilizzo",
+      motivo: "L'esempio era chiaro e l'ho adattato subito alla mia pagina."
+    },
+    verifica: {
+      fiducia: "Molto",
+      controllo: ["Ho eseguito il codice", "Ho confrontato con gli appunti"],
+      trovato: "no",
+      cosaTrovato: "",
+      accorto: "",
+      corretto: ""
+    },
+    trasforma: {
+      tenuto: "Il tag img con l'attributo src, come mostrato nell'esempio.",
+      cambiato: "Ho aggiunto un testo alternativo all'immagine, non presente nell'esempio.",
+      eliminato: "Nessuna parte, la struttura era corretta.",
+      risultato: "Pagina HTML funzionante con titolo, due sezioni di testo e un'immagine."
+    },
+    rifletti: {
+      autonoma: "Ho scritto tutto il testo della pagina e la struttura generale.",
+      momentoUtile: "Quando non ricordavo l'attributo corretto per inserire l'immagine.",
+      rifiutato: "No, la spiegazione era corretta e l'ho usata direttamente.",
+      decisione: "Aggiungere sempre un testo alternativo alle immagini per accessibilità.",
+      imparato: "Che il tag img richiede l'attributo src per funzionare correttamente.",
+      diverso: "Proverei prima da sola con la documentazione prima di chiedere aiuto."
+    },
+    autovalutazione: {
+      livello: 2,
+      perche: "Ho usato l'aiuto ricevuto quasi senza modificarlo, ma ho verificato che funzionasse."
+    }
+  }]
+};
+const emptyData = () => ({
+  nickname: {
+    group: null,
+    name: ""
+  },
+  pianifica: {
+    cosaDevoFare: "",
+    cosaVieneChiesto: "",
+    cosaSoGia: "",
+    comeProcedere: "",
+    aiuto: [],
+    personale: ""
+  },
+  orchestra: {
+    chiesto: "",
+    perche: "",
+    risposta: "",
+    decisione: "",
+    motivo: ""
+  },
+  verifica: {
+    fiducia: "",
+    controllo: [],
+    trovato: "",
+    cosaTrovato: "",
+    accorto: "",
+    corretto: ""
+  },
+  trasforma: {
+    tenuto: "",
+    cambiato: "",
+    eliminato: "",
+    risultato: ""
+  },
+  rifletti: {
+    autonoma: "",
+    momentoUtile: "",
+    rifiutato: "",
+    decisione: "",
+    imparato: "",
+    diverso: ""
+  },
+  autovalutazione: {
+    livello: null,
+    perche: ""
+  },
+  notaDocente: ""
+});
+const emptyQuick = () => ({
+  cosa: "",
+  uso: "",
+  deciso: "",
+  verificato: "",
+  imparato: ""
+});
+
+/* ---------------------------------------------------------
+   SMALL UI PRIMITIVES
+--------------------------------------------------------- */
+function Field({
+  label,
+  hint,
+  children
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mb-6"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "block text-[15px] font-medium mb-1.5",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, label), hint && /*#__PURE__*/React.createElement("p", {
+    className: "text-sm mb-2",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, hint), children);
+}
+function TextArea({
+  value,
+  onChange,
+  placeholder,
+  rows = 3
+}) {
+  return /*#__PURE__*/React.createElement("textarea", {
+    value: value,
+    onChange: e => onChange(e.target.value),
+    placeholder: placeholder,
+    rows: rows,
+    className: "w-full rounded-2xl border px-4 py-3 text-[15px] leading-relaxed outline-none transition-shadow focus:shadow-[0_0_0_3px_rgba(169,198,216,0.35)]",
+    style: {
+      borderColor: COLORS.line,
+      color: COLORS.warmGray,
+      background: "#FEFDFB"
+    }
+  });
+}
+function CheckboxGroup({
+  options,
+  selected,
+  onToggle,
+  columns = 2
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: `grid gap-2.5`,
+    style: {
+      gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))`
+    }
+  }, options.map(opt => {
+    const active = selected.includes(opt);
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      key: opt,
+      onClick: () => onToggle(opt),
+      className: "flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left text-sm transition-colors",
+      style: {
+        borderColor: active ? COLORS.sage : COLORS.line,
+        background: active ? "rgba(169,194,160,0.16)" : "#FEFDFB",
+        color: COLORS.warmGray
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-md border",
+      style: {
+        borderColor: active ? COLORS.sage : COLORS.line,
+        background: active ? COLORS.sage : "transparent",
+        width: 18,
+        height: 18
+      }
+    }, active && /*#__PURE__*/React.createElement(Check, {
+      size: 12,
+      color: "#fff",
+      strokeWidth: 3
+    })), opt);
+  }));
+}
+function PrimaryButton({
+  children,
+  onClick,
+  icon: Icon,
+  disabled,
+  full
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: onClick,
+    disabled: disabled,
+    className: `inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[15px] font-medium transition-transform active:scale-[0.98] ${full ? "w-full" : ""} disabled:opacity-40 disabled:pointer-events-none`,
+    style: {
+      background: COLORS.warmGray,
+      color: "#fff"
+    }
+  }, children, Icon && /*#__PURE__*/React.createElement(Icon, {
+    size: 17
+  }));
+}
+function GhostButton({
+  children,
+  onClick,
+  icon: Icon
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: onClick,
+    className: "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[15px] font-medium transition-colors",
+    style: {
+      color: COLORS.warmGray,
+      background: "transparent"
+    }
+  }, Icon && /*#__PURE__*/React.createElement(Icon, {
+    size: 17
+  }), children);
+}
+function TipBanner() {
+  const [i, setI] = useState(() => Math.floor(Math.random() * TIPS.length));
+  useEffect(() => {
+    const t = setInterval(() => setI(v => (v + 1) % TIPS.length), 9000);
+    return () => clearInterval(t);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mt-8 rounded-2xl px-4 py-3 text-sm italic text-center transition-opacity duration-500",
+    style: {
+      background: "rgba(199,184,222,0.16)",
+      color: COLORS.warmGrayLight
+    }
+  }, TIPS[i]);
+}
+
+/* ---------------------------------------------------------
+   PROGRESS BAR
+--------------------------------------------------------- */
+function ProgressBar({
+  step,
+  done
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "w-full max-w-[640px] mx-auto mb-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center"
+  }, STEP_META.map((s, idx) => {
+    const isDone = done.includes(idx);
+    const isCurrent = idx === step;
+    const Icon = s.icon;
+    return /*#__PURE__*/React.createElement(React.Fragment, {
+      key: s.key
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-col items-center gap-1.5",
+      style: {
+        width: 56
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-center rounded-full transition-all duration-300",
+      style: {
+        width: isCurrent ? 40 : 32,
+        height: isCurrent ? 40 : 32,
+        background: isDone ? COLORS.sage : isCurrent ? s.color : "#EFEAE0",
+        color: isDone || isCurrent ? "#fff" : COLORS.warmGrayLight
+      }
+    }, isDone ? /*#__PURE__*/React.createElement(Check, {
+      size: 16,
+      strokeWidth: 3
+    }) : /*#__PURE__*/React.createElement(Icon, {
+      size: 16
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "text-[11px] text-center leading-tight",
+      style: {
+        color: isCurrent ? COLORS.warmGray : COLORS.warmGrayLight,
+        fontWeight: isCurrent ? 600 : 400
+      }
+    }, s.label)), idx < STEP_META.length - 1 && /*#__PURE__*/React.createElement("div", {
+      className: "h-[2px] flex-1 rounded-full -mt-4",
+      style: {
+        background: isDone ? COLORS.sage : "#EFEAE0"
+      }
+    }));
+  })));
+}
+
+/* ---------------------------------------------------------
+   SCREEN SHELL
+--------------------------------------------------------- */
+function Screen({
+  title,
+  subtitle,
+  children,
+  onBack,
+  onNext,
+  nextLabel = "Continua",
+  nextDisabled,
+  footerExtra
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "rounded-[28px] p-6 sm:p-9 animate-[fadeIn_0.4s_ease]",
+    style: {
+      background: COLORS.card,
+      boxShadow: "0 2px 24px rgba(91,85,78,0.06)"
+    }
+  }, /*#__PURE__*/React.createElement("h1", {
+    className: "text-2xl sm:text-[26px] font-semibold mb-1.5",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, title), subtitle && /*#__PURE__*/React.createElement("p", {
+    className: "italic text-[15px] mb-7",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, subtitle), /*#__PURE__*/React.createElement("div", null, children), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-end gap-2 mt-8 pt-6",
+    style: {
+      borderTop: `1px solid ${COLORS.line}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between w-full"
+  }, /*#__PURE__*/React.createElement(GhostButton, {
+    onClick: onBack,
+    icon: ArrowLeft
+  }, "Indietro"), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3"
+  }, footerExtra, /*#__PURE__*/React.createElement(PrimaryButton, {
+    onClick: onNext,
+    icon: ArrowRight,
+    disabled: nextDisabled
+  }, nextLabel))), nextDisabled && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Rispondi ai campi mancanti per continuare.")));
+}
+
+/* ---------------------------------------------------------
+   HOME
+--------------------------------------------------------- */
+function Home({
+  onStart,
+  onQuick,
+  onDemo,
+  resumeAvailable,
+  onResume,
+  onRestartFresh
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "text-center"
+  }, resumeAvailable && /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl px-5 py-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3",
+    style: {
+      background: "rgba(169,198,216,0.18)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-sm",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Abbiamo ritrovato il tuo percorso. Vuoi continuare?"), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onResume,
+    className: "rounded-full px-4 py-1.5 text-sm font-medium text-white",
+    style: {
+      background: COLORS.warmGray
+    }
+  }, "Continua"), /*#__PURE__*/React.createElement("button", {
+    onClick: onRestartFresh,
+    className: "rounded-full px-4 py-1.5 text-sm font-medium",
+    style: {
+      color: COLORS.warmGray,
+      border: `1px solid ${COLORS.line}`
+    }
+  }, "Ricomincia"))), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-center gap-2 mb-4"
+  }, ["🧭", "🤖", "🔎", "✨", "💭"].map((e, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: "text-2xl"
+  }, e))), /*#__PURE__*/React.createElement("h1", {
+    className: "text-4xl sm:text-5xl font-semibold tracking-tight mb-3",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "Alethe", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: COLORS.dustBlue
+    }
+  }, "IA")), /*#__PURE__*/React.createElement("p", {
+    className: "text-base sm:text-lg font-medium mb-4",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "Non cercare la verità dell'IA. Costruisci la tua."), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-medium tracking-[0.14em] uppercase mb-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "P.O.R.T.A."), /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] mb-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Pianifica · Orchestra · Riscontra · Trasforma · Argomenta"), /*#__PURE__*/React.createElement("p", {
+    className: "max-w-md mx-auto text-[15px] leading-relaxed mb-9 mt-6",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Usa questa app per documentare come affronti un compito quando puoi utilizzare l'Intelligenza Artificiale."), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-center gap-3"
+  }, /*#__PURE__*/React.createElement(PrimaryButton, {
+    onClick: onStart,
+    icon: ArrowRight
+  }, "Inizia il tuo percorso"), /*#__PURE__*/React.createElement("button", {
+    onClick: onQuick,
+    className: "inline-flex items-center gap-1.5 text-sm font-medium mt-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, /*#__PURE__*/React.createElement(Zap, {
+    size: 15
+  }), " Percorso rapido (5 minuti)"), /*#__PURE__*/React.createElement("button", {
+    onClick: onDemo,
+    className: "text-xs mt-2 underline underline-offset-2",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Prova con dati di esempio →")), /*#__PURE__*/React.createElement("p", {
+    className: "max-w-sm mx-auto text-sm italic mt-10",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Non valuteremo solo ciò che produci. È importante anche capire come ci sei arrivato."));
+}
+
+/* ---------------------------------------------------------
+   STEP 1 — PIANIFICA
+--------------------------------------------------------- */
+function StepPianifica({
+  data,
+  setData,
+  ...nav
+}) {
+  const d = data.pianifica;
+  const upd = (k, v) => setData(s => ({
+    ...s,
+    pianifica: {
+      ...s.pianifica,
+      [k]: v
+    }
+  }));
+  const toggleAiuto = opt => upd("aiuto", d.aiuto.includes(opt) ? d.aiuto.filter(o => o !== opt) : [...d.aiuto, opt]);
+  const isValid = d.cosaDevoFare.trim() && d.cosaVieneChiesto.trim() && d.cosaSoGia.trim() && d.comeProcedere.trim() && d.aiuto.length > 0 && d.personale.trim();
+  return /*#__PURE__*/React.createElement(Screen, {
+    title: "1. Pianifica",
+    subtitle: "«Prima di chiedere aiuto, fermati e pensa.»",
+    nextDisabled: !isValid,
+    ...nav
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Che cosa devo fare? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.cosaDevoFare,
+    onChange: v => upd("cosaDevoFare", v),
+    placeholder: "Descrivi il compito con parole tue…"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Che cosa mi viene chiesto? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.cosaVieneChiesto,
+    onChange: v => upd("cosaVieneChiesto", v),
+    placeholder: "La consegna in dettaglio…"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Che cosa so già? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.cosaSoGia,
+    onChange: v => upd("cosaSoGia", v),
+    placeholder: "Le conoscenze che hai già…"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Come penso di procedere? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.comeProcedere,
+    onChange: v => upd("comeProcedere", v),
+    placeholder: "La tua strategia iniziale…"
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "In quale parte potrebbe aiutarmi l'IA? *",
+    hint: "Seleziona almeno un'opzione."
+  }, /*#__PURE__*/React.createElement(CheckboxGroup, {
+    options: AIUTO_OPTIONS,
+    selected: d.aiuto,
+    onToggle: toggleAiuto
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Una cosa che voglio fare personalmente è… *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.personale,
+    onChange: v => upd("personale", v),
+    rows: 2,
+    placeholder: "Qualcosa che vuoi fare senza l'aiuto dell'IA…"
+  })), /*#__PURE__*/React.createElement(TipBanner, null));
+}
+
+/* ---------------------------------------------------------
+   STEP 2 — ORCHESTRA
+--------------------------------------------------------- */
+function StepOrchestra({
+  data,
+  setData,
+  ...nav
+}) {
+  const d = data.orchestra;
+  const upd = (k, v) => setData(s => ({
+    ...s,
+    orchestra: {
+      ...s.orchestra,
+      [k]: v
+    }
+  }));
+  const [activeCard, setActiveCard] = useState(null);
+  const DECISIONS = [{
+    key: "utilizzo",
+    label: "Utilizzo",
+    icon: Check
+  }, {
+    key: "parziale",
+    label: "Utilizzo in parte",
+    icon: SearchCheck
+  }, {
+    key: "modifico",
+    label: "Modifico",
+    icon: PenLine
+  }, {
+    key: "rifiuto",
+    label: "Rifiuto",
+    icon: X
+  }];
+  const isValid = d.chiesto.trim() && d.perche.trim() && d.risposta.trim() && d.decisione && d.motivo.trim();
+  return /*#__PURE__*/React.createElement(Screen, {
+    title: "2. Orchestra",
+    subtitle: "«L'IA è uno strumento. Decidi tu come usarlo.»",
+    nextDisabled: !isValid,
+    ...nav
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] leading-relaxed mb-6",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Non devi necessariamente chiedere all'IA di risolvere tutto. Puoi chiederle di spiegare, suggerire, confrontare, controllare o aiutarti a trovare un errore."), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8"
+  }, SUGGESTION_CARDS.map(c => {
+    const Icon = c.icon;
+    const active = activeCard === c.title;
+    return /*#__PURE__*/React.createElement("button", {
+      key: c.title,
+      onClick: () => setActiveCard(active ? null : c.title),
+      className: "rounded-2xl p-4 text-left transition-transform active:scale-[0.97]",
+      style: {
+        background: active ? c.color : "rgba(0,0,0,0.02)",
+        border: `1px solid ${COLORS.line}`
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      size: 19,
+      color: active ? "#fff" : COLORS.warmGray
+    }), /*#__PURE__*/React.createElement("p", {
+      className: "text-sm font-medium mt-2",
+      style: {
+        color: active ? "#fff" : COLORS.warmGray
+      }
+    }, c.title));
+  })), activeCard && /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl px-4 py-3 mb-8 text-sm",
+    style: {
+      background: "rgba(199,184,222,0.16)",
+      color: COLORS.warmGray
+    }
+  }, "Esempio: “", SUGGESTION_CARDS.find(c => c.title === activeCard).prompt, "”", /*#__PURE__*/React.createElement("span", {
+    className: "block mt-1 text-xs",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Un suggerimento, non un obbligo — usa le parole tue.")), /*#__PURE__*/React.createElement("div", {
+    className: "pt-2 pb-1",
+    style: {
+      borderTop: `1px solid ${COLORS.line}`
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] font-medium mt-6 mb-5",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Racconta la tua decisione")), /*#__PURE__*/React.createElement(Field, {
+    label: "Che cosa hai chiesto all'IA? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.chiesto,
+    onChange: v => upd("chiesto", v)
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Perché glielo hai chiesto? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.perche,
+    onChange: v => upd("perche", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Che cosa ti ha risposto? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.risposta,
+    onChange: v => upd("risposta", v)
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Cosa hai deciso? *"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2.5"
+  }, DECISIONS.map(opt => {
+    const Icon = opt.icon;
+    const active = d.decisione === opt.key;
+    return /*#__PURE__*/React.createElement("button", {
+      key: opt.key,
+      onClick: () => upd("decisione", opt.key),
+      className: "flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-medium transition-colors",
+      style: {
+        background: active ? COLORS.warmGray : "#FEFDFB",
+        color: active ? "#fff" : COLORS.warmGray,
+        border: `1px solid ${active ? COLORS.warmGray : COLORS.line}`
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      size: 15
+    }), " ", opt.label);
+  }))), /*#__PURE__*/React.createElement(Field, {
+    label: "Perché hai preso questa decisione? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.motivo,
+    onChange: v => upd("motivo", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(TipBanner, null));
+}
+
+/* ---------------------------------------------------------
+   STEP 3 — VERIFICA
+--------------------------------------------------------- */
+function StepVerifica({
+  data,
+  setData,
+  ...nav
+}) {
+  const d = data.verifica;
+  const upd = (k, v) => setData(s => ({
+    ...s,
+    verifica: {
+      ...s.verifica,
+      [k]: v
+    }
+  }));
+  const toggleControllo = opt => upd("controllo", d.controllo.includes(opt) ? d.controllo.filter(o => o !== opt) : [...d.controllo, opt]);
+  const isValid = d.fiducia && d.controllo.length > 0 && d.trovato && (d.trovato !== "si" || d.cosaTrovato.trim() && d.accorto.trim() && d.corretto.trim());
+  return /*#__PURE__*/React.createElement(Screen, {
+    title: "3. Riscontra",
+    subtitle: "«Una risposta dell'IA non è automaticamente una risposta corretta.»",
+    nextDisabled: !isValid,
+    ...nav
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Quanto ti fidi della risposta che hai ricevuto? *"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-3"
+  }, [{
+    e: "😕",
+    l: "Poco"
+  }, {
+    e: "😐",
+    l: "Abbastanza"
+  }, {
+    e: "🙂",
+    l: "Molto"
+  }].map(o => /*#__PURE__*/React.createElement("button", {
+    key: o.l,
+    onClick: () => upd("fiducia", o.l),
+    className: "flex-1 flex flex-col items-center gap-1.5 rounded-2xl py-4 transition-colors",
+    style: {
+      background: d.fiducia === o.l ? "rgba(169,194,160,0.22)" : "#FEFDFB",
+      border: `1px solid ${d.fiducia === o.l ? COLORS.sage : COLORS.line}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl"
+  }, o.e), /*#__PURE__*/React.createElement("span", {
+    className: "text-sm font-medium",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, o.l))))), /*#__PURE__*/React.createElement(Field, {
+    label: "Come hai controllato? *",
+    hint: "Seleziona almeno un'opzione."
+  }, /*#__PURE__*/React.createElement(CheckboxGroup, {
+    options: CONTROLLO_OPTIONS,
+    selected: d.controllo,
+    onToggle: toggleControllo,
+    columns: 1
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Hai trovato qualcosa che non ti convince? *"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-3"
+  }, ["No", "Sì"].map(o => {
+    const val = o === "No" ? "no" : "si";
+    const active = d.trovato === val;
+    return /*#__PURE__*/React.createElement("button", {
+      key: o,
+      onClick: () => upd("trovato", val),
+      className: "rounded-full px-6 py-2.5 text-sm font-medium transition-colors",
+      style: {
+        background: active ? COLORS.warmGray : "#FEFDFB",
+        color: active ? "#fff" : COLORS.warmGray,
+        border: `1px solid ${active ? COLORS.warmGray : COLORS.line}`
+      }
+    }, o);
+  }))), d.trovato === "si" && /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-5 mb-2",
+    style: {
+      background: "rgba(243,217,196,0.2)"
+    }
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Che cosa hai trovato? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.cosaTrovato,
+    onChange: v => upd("cosaTrovato", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Come te ne sei accorto? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.accorto,
+    onChange: v => upd("accorto", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Come hai corretto il problema? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.corretto,
+    onChange: v => upd("corretto", v),
+    rows: 2
+  }))), /*#__PURE__*/React.createElement(TipBanner, null));
+}
+
+/* ---------------------------------------------------------
+   STEP 4 — TRASFORMA
+--------------------------------------------------------- */
+function StepTrasforma({
+  data,
+  setData,
+  ...nav
+}) {
+  const d = data.trasforma;
+  const upd = (k, v) => setData(s => ({
+    ...s,
+    trasforma: {
+      ...s.trasforma,
+      [k]: v
+    }
+  }));
+  const isValid = d.tenuto.trim() && d.cambiato.trim() && d.eliminato.trim() && d.risultato.trim();
+  return /*#__PURE__*/React.createElement(Screen, {
+    title: "4. Trasforma",
+    subtitle: "«Adesso costruisci la tua soluzione.»",
+    nextDisabled: !isValid,
+    ...nav
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid sm:grid-cols-3 gap-3 mb-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-4",
+    style: {
+      background: "rgba(169,198,216,0.14)"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mb-1",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Ho tenuto *"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs mb-2",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Cosa dell'aiuto dell'IA hai utilizzato?"), /*#__PURE__*/React.createElement(TextArea, {
+    value: d.tenuto,
+    onChange: v => upd("tenuto", v),
+    rows: 3
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-4",
+    style: {
+      background: "rgba(199,184,222,0.14)"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mb-1",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Ho cambiato *"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs mb-2",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Cosa hai modificato?"), /*#__PURE__*/React.createElement(TextArea, {
+    value: d.cambiato,
+    onChange: v => upd("cambiato", v),
+    rows: 3
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-4",
+    style: {
+      background: "rgba(243,217,196,0.22)"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mb-1",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Ho eliminato *"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs mb-2",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Cosa hai deciso di non utilizzare?"), /*#__PURE__*/React.createElement(TextArea, {
+    value: d.eliminato,
+    onChange: v => upd("eliminato", v),
+    rows: 3
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mt-8"
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Il mio risultato *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.risultato,
+    onChange: v => upd("risultato", v),
+    rows: 5,
+    placeholder: "Scrivi o incolla qui il tuo risultato finale…"
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm italic mt-4",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Il risultato finale è importante, ma non è l'unica cosa che conta.")), /*#__PURE__*/React.createElement(TipBanner, null));
+}
+
+/* ---------------------------------------------------------
+   STEP 5 — RIFLETTI
+--------------------------------------------------------- */
+function StepRifletti({
+  data,
+  setData,
+  ...nav
+}) {
+  const d = data.rifletti;
+  const upd = (k, v) => setData(s => ({
+    ...s,
+    rifletti: {
+      ...s.rifletti,
+      [k]: v
+    }
+  }));
+  const isValid = d.autonoma.trim() && d.momentoUtile.trim() && d.rifiutato.trim() && d.decisione.trim() && d.imparato.trim() && d.diverso.trim();
+  return /*#__PURE__*/React.createElement(Screen, {
+    title: "5. Argomenta",
+    subtitle: "«Adesso guarda indietro al tuo percorso.»",
+    nextDisabled: !isValid,
+    ...nav
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Quale parte hai svolto autonomamente? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.autonoma,
+    onChange: v => upd("autonoma", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "In quale momento l'IA ti è stata più utile? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.momentoUtile,
+    onChange: v => upd("momentoUtile", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Hai mai rifiutato o corretto una risposta dell'IA? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.rifiutato,
+    onChange: v => upd("rifiutato", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Qual è stata la decisione più importante che hai preso? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.decisione,
+    onChange: v => upd("decisione", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Che cosa hai imparato grazie a questo processo? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.imparato,
+    onChange: v => upd("imparato", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Se rifacessi il compito, cosa faresti diversamente? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.diverso,
+    onChange: v => upd("diverso", v),
+    rows: 2
+  })), /*#__PURE__*/React.createElement(TipBanner, null));
+}
+
+/* ---------------------------------------------------------
+   AUTOVALUTAZIONE
+--------------------------------------------------------- */
+function SelfEval({
+  data,
+  setData,
+  onBack,
+  onNext
+}) {
+  const d = data.autovalutazione;
+  const upd = (k, v) => setData(s => ({
+    ...s,
+    autovalutazione: {
+      ...s.autovalutazione,
+      [k]: v
+    }
+  }));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "rounded-[28px] p-6 sm:p-9",
+    style: {
+      background: COLORS.card,
+      boxShadow: "0 2px 24px rgba(91,85,78,0.06)"
+    }
+  }, /*#__PURE__*/React.createElement("h1", {
+    className: "text-2xl sm:text-[26px] font-semibold mb-1.5 text-center",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "Che tipo di utilizzatore dell'IA sono?"), /*#__PURE__*/React.createElement("p", {
+    className: "italic text-[15px] mb-8 text-center",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Dove ti collochi oggi?"), /*#__PURE__*/React.createElement("div", {
+    className: "grid sm:grid-cols-2 gap-3 mb-7"
+  }, LEVELS.map(lvl => {
+    const active = d.livello === lvl.n;
+    return /*#__PURE__*/React.createElement("button", {
+      key: lvl.n,
+      onClick: () => upd("livello", lvl.n),
+      className: "text-left rounded-2xl p-5 transition-transform active:scale-[0.98]",
+      style: {
+        background: active ? "rgba(169,194,160,0.18)" : "#FEFDFB",
+        border: `1.5px solid ${active ? COLORS.sage : COLORS.line}`
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "text-xs font-semibold mb-1 uppercase tracking-wide",
+      style: {
+        color: COLORS.warmGrayLight
+      }
+    }, "Livello ", lvl.n), /*#__PURE__*/React.createElement("p", {
+      className: "text-lg font-semibold mb-1",
+      style: {
+        color: COLORS.warmGray,
+        fontFamily: "'Quicksand', sans-serif"
+      }
+    }, lvl.title), /*#__PURE__*/React.createElement("p", {
+      className: "text-sm",
+      style: {
+        color: COLORS.warmGrayLight
+      }
+    }, lvl.desc));
+  })), /*#__PURE__*/React.createElement(Field, {
+    label: "Perché? *"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: d.perche,
+    onChange: v => upd("perche", v),
+    rows: 3
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs italic mb-6",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Questa è un'autovalutazione: nessun punteggio calcola il livello al posto tuo."), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-end gap-2 pt-6",
+    style: {
+      borderTop: `1px solid ${COLORS.line}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between w-full"
+  }, /*#__PURE__*/React.createElement(GhostButton, {
+    onClick: onBack,
+    icon: ArrowLeft
+  }, "Indietro"), /*#__PURE__*/React.createElement(PrimaryButton, {
+    onClick: onNext,
+    icon: ArrowRight,
+    disabled: !d.livello || !d.perche.trim()
+  }, "Vedi il tuo percorso")), (!d.livello || !d.perche.trim()) && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Rispondi ai campi mancanti per continuare.")));
+}
+
+/* ---------------------------------------------------------
+   FINAL SUMMARY
+--------------------------------------------------------- */
+function buildSummaryText(data) {
+  const lvl = LEVELS.find(l => l.n === data.autovalutazione.livello);
+  return `IL MIO PERCORSO — AletheIA (metodo P.O.R.T.A.)
+${data.nickname?.name ? "Nickname: " + (getNicknameEmoji(data.nickname.group, data.nickname.name) || "") + " " + data.nickname.name + (data.nickname.group ? " (" + (NICKNAME_GROUPS.find(g => g.key === data.nickname.group)?.label || "") + ")" : "") : ""}
+
+COMPITO
+${data.pianifica.cosaDevoFare}
+Richiesto: ${data.pianifica.cosaVieneChiesto}
+So già: ${data.pianifica.cosaSoGia}
+Strategia: ${data.pianifica.comeProcedere}
+L'IA potrebbe aiutare con: ${data.pianifica.aiuto.join(", ")}
+Voglio fare da solo: ${data.pianifica.personale}
+
+UTILIZZO DELL'IA
+Chiesto: ${data.orchestra.chiesto}
+Perché: ${data.orchestra.perche}
+Risposta ricevuta: ${data.orchestra.risposta}
+Decisione: ${DECISION_LABELS[data.orchestra.decisione] || data.orchestra.decisione}
+Motivo: ${data.orchestra.motivo}
+
+RISCONTRO
+Fiducia nella risposta: ${data.verifica.fiducia}
+Come ho controllato: ${data.verifica.controllo.join(", ")}
+Problemi trovati: ${data.verifica.trovato === "si" ? "Sì" : "No"}
+${data.verifica.trovato === "si" ? `- Cosa: ${data.verifica.cosaTrovato}\n- Come me ne sono accorto: ${data.verifica.accorto}\n- Correzione: ${data.verifica.corretto}` : ""}
+
+TRASFORMAZIONE
+Ho tenuto: ${data.trasforma.tenuto}
+Ho cambiato: ${data.trasforma.cambiato}
+Ho eliminato: ${data.trasforma.eliminato}
+Risultato: ${data.trasforma.risultato}
+
+ARGOMENTAZIONE
+Parte autonoma: ${data.rifletti.autonoma}
+Momento più utile dell'IA: ${data.rifletti.momentoUtile}
+Ho rifiutato/corretto: ${data.rifletti.rifiutato}
+Decisione più importante: ${data.rifletti.decisione}
+Cosa ho imparato: ${data.rifletti.imparato}
+Cosa farei diversamente: ${data.rifletti.diverso}
+
+AUTOVALUTAZIONE
+Livello ${lvl?.n} — ${lvl?.title}: ${lvl?.desc}
+Perché: ${data.autovalutazione.perche}
+${data.notaDocente?.trim() ? "\nNOTA PER IL DOCENTE\n" + data.notaDocente.trim() + "\n" : ""}`;
+}
+
+/* ---------------------------------------------------------
+   CONSEGNA TRAMITE GOOGLE FORM
+   Il modulo va creato una volta dal docente; qui sono mappati
+   gli ID dei campi ("entry.XXXXXXX") ottenuti dal link precompilato
+   di Google Forms, uno per ciascuna sezione del percorso.
+--------------------------------------------------------- */
+const GOOGLE_FORM = {
+  baseUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfh7GFG8K2i3SoPkgqBcfR8HwPZF48zjceEJmvhsiohWHU26Q/viewform",
+  entries: {
+    nickname: "entry.1313629163",
+    pianifica: "entry.997386030",
+    orchestra: "entry.1904230530",
+    riscontra: "entry.260032942",
+    trasforma: "entry.415689621",
+    argomenta: "entry.1378510577",
+    autovalutazione: "entry.473983118",
+    nota: "entry.1694457227"
+  }
+};
+function buildGoogleFormUrl(data) {
+  const g = NICKNAME_GROUPS.find(gr => gr.key === data.nickname?.group);
+  const nicknameText = data.nickname?.name ? `${data.nickname.name}${g ? " (" + g.label + ")" : ""}` : "";
+  const pianificaText = [`Compito: ${data.pianifica.cosaDevoFare}`, `Richiesto: ${data.pianifica.cosaVieneChiesto}`, `So già: ${data.pianifica.cosaSoGia}`, `Strategia: ${data.pianifica.comeProcedere}`, `L'IA può aiutare con: ${data.pianifica.aiuto.join(", ")}`, `Voglio fare da solo: ${data.pianifica.personale}`].join("\n");
+  const orchestraText = [`Chiesto all'IA: ${data.orchestra.chiesto}`, `Perché: ${data.orchestra.perche}`, `Risposta ricevuta: ${data.orchestra.risposta}`, `Decisione: ${DECISION_LABELS[data.orchestra.decisione] || data.orchestra.decisione}`, `Motivo: ${data.orchestra.motivo}`].join("\n");
+  const riscontraLines = [`Fiducia: ${data.verifica.fiducia}`, `Come ho controllato: ${data.verifica.controllo.join(", ")}`, `Problemi trovati: ${data.verifica.trovato === "si" ? "Sì" : "No"}`];
+  if (data.verifica.trovato === "si") {
+    riscontraLines.push(`Cosa: ${data.verifica.cosaTrovato}`);
+    riscontraLines.push(`Come me ne sono accorto: ${data.verifica.accorto}`);
+    riscontraLines.push(`Correzione: ${data.verifica.corretto}`);
+  }
+  const riscontraText = riscontraLines.join("\n");
+  const trasformaText = [`Ho tenuto: ${data.trasforma.tenuto}`, `Ho cambiato: ${data.trasforma.cambiato}`, `Ho eliminato: ${data.trasforma.eliminato}`, `Risultato: ${data.trasforma.risultato}`].join("\n");
+  const argomentaText = [`Parte autonoma: ${data.rifletti.autonoma}`, `Momento più utile dell'IA: ${data.rifletti.momentoUtile}`, `Ho rifiutato/corretto: ${data.rifletti.rifiutato}`, `Decisione più importante: ${data.rifletti.decisione}`, `Cosa ho imparato: ${data.rifletti.imparato}`, `Cosa farei diversamente: ${data.rifletti.diverso}`].join("\n");
+  const lvl = LEVELS.find(l => l.n === data.autovalutazione.livello);
+  const autovalutazioneText = [`Livello ${lvl?.n} — ${lvl?.title}: ${lvl?.desc}`, `Perché: ${data.autovalutazione.perche}`].join("\n");
+  const notaText = data.notaDocente?.trim() || "";
+  const params = new URLSearchParams();
+  params.set("usp", "pp_url");
+  params.set(GOOGLE_FORM.entries.nickname, nicknameText);
+  params.set(GOOGLE_FORM.entries.pianifica, pianificaText);
+  params.set(GOOGLE_FORM.entries.orchestra, orchestraText);
+  params.set(GOOGLE_FORM.entries.riscontra, riscontraText);
+  params.set(GOOGLE_FORM.entries.trasforma, trasformaText);
+  params.set(GOOGLE_FORM.entries.argomenta, argomentaText);
+  params.set(GOOGLE_FORM.entries.autovalutazione, autovalutazioneText);
+  params.set(GOOGLE_FORM.entries.nota, notaText);
+  return `${GOOGLE_FORM.baseUrl}?${params.toString()}`;
+}
+function SummaryRow({
+  label,
+  value
+}) {
+  if (!value || Array.isArray(value) && value.length === 0) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mb-3"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-semibold uppercase tracking-wide mb-0.5",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, label), /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] leading-relaxed",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, Array.isArray(value) ? value.join(", ") : value));
+}
+function FinalSummary({
+  data,
+  setData,
+  onNewJourney
+}) {
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
+  const hiddenTextRef = useRef(null);
+  const lvl = LEVELS.find(l => l.n === data.autovalutazione.livello);
+  const handleCopy = async () => {
+    const text = buildSummaryText(data);
+    setCopyError(false);
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2200);
+        return;
+      }
+      throw new Error("clipboard API non disponibile");
+    } catch (e) {
+      // Fallback for sandboxed/embedded contexts where the Clipboard API is blocked:
+      // select the hidden textarea content and use the legacy copy command.
+      const ta = hiddenTextRef.current;
+      if (ta) {
+        ta.style.display = "block";
+        ta.focus();
+        ta.select();
+        try {
+          const ok = document.execCommand("copy");
+          ta.style.display = "none";
+          if (ok) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2200);
+            return;
+          }
+        } catch (err) {
+          ta.style.display = "none";
+        }
+      }
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 4000);
+    }
+  };
+  const timeline = [{
+    meta: STEP_META[0],
+    caption: truncate(data.pianifica.cosaDevoFare, 60)
+  }, {
+    meta: STEP_META[1],
+    caption: [DECISION_LABELS[data.orchestra.decisione], truncate(data.orchestra.chiesto, 36)].filter(Boolean).join(" · ")
+  }, {
+    meta: STEP_META[2],
+    caption: data.verifica.fiducia ? `Fiducia: ${data.verifica.fiducia}` : ""
+  }, {
+    meta: STEP_META[3],
+    caption: truncate(data.trasforma.risultato, 60)
+  }, {
+    meta: STEP_META[4],
+    caption: truncate(data.rifletti.decisione, 60)
+  }];
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    id: "porta-print-area",
+    className: "rounded-[28px] p-6 sm:p-9",
+    style: {
+      background: COLORS.card,
+      boxShadow: "0 2px 24px rgba(91,85,78,0.06)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-center mb-8"
+  }, data.nickname?.name && (() => {
+    const g = NICKNAME_GROUPS.find(gr => gr.key === data.nickname.group);
+    const emoji = getNicknameEmoji(data.nickname.group, data.nickname.name);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-col items-center mb-4"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-center rounded-full mb-2",
+      style: {
+        width: 64,
+        height: 64,
+        background: g ? `${g.color}33` : "rgba(0,0,0,0.04)",
+        border: `2px solid ${g ? g.color : COLORS.line}`
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-3xl leading-none"
+    }, emoji)), /*#__PURE__*/React.createElement("span", {
+      className: "text-base font-semibold",
+      style: {
+        color: COLORS.warmGray,
+        fontFamily: "'Quicksand', sans-serif"
+      }
+    }, data.nickname.name), g && /*#__PURE__*/React.createElement("span", {
+      className: "text-xs",
+      style: {
+        color: COLORS.warmGrayLight
+      }
+    }, g.label));
+  })(), /*#__PURE__*/React.createElement("h1", {
+    className: "text-2xl sm:text-[26px] font-semibold mb-1",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "Il tuo percorso è completo 🎉")), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-5 gap-3 mb-8"
+  }, timeline.map((t, i) => {
+    const Icon = t.meta.icon;
+    return /*#__PURE__*/React.createElement("div", {
+      key: t.meta.key,
+      className: "flex sm:flex-col items-center sm:text-center gap-3 sm:gap-2 rounded-2xl p-3",
+      style: {
+        background: `${t.meta.color}18`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-center rounded-full shrink-0",
+      style: {
+        width: 34,
+        height: 34,
+        background: t.meta.color,
+        color: "#fff"
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      size: 16
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "text-xs font-semibold",
+      style: {
+        color: COLORS.warmGray
+      }
+    }, i + 1, " · ", t.meta.label), /*#__PURE__*/React.createElement("p", {
+      className: "text-xs mt-0.5 truncate sm:whitespace-normal",
+      style: {
+        color: COLORS.warmGrayLight
+      }
+    }, t.caption || "—")));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-5 mb-6",
+    style: {
+      background: "rgba(169,194,160,0.14)"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-semibold uppercase tracking-wide mb-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Autovalutazione"), /*#__PURE__*/React.createElement("p", {
+    className: "text-lg font-semibold",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "Livello ", lvl?.n, " — ", lvl?.title), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm mt-1",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, data.autovalutazione.perche)), data.rifletti.imparato && /*#__PURE__*/React.createElement("div", {
+    className: "text-center px-4 sm:px-10 mb-8"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-lg sm:text-xl italic leading-snug",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "“", data.rifletti.imparato, "”"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs mt-2 uppercase tracking-wide",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Cosa ho imparato")), /*#__PURE__*/React.createElement("h2", {
+    className: "text-lg font-semibold mb-4",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "Il mio percorso"), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mt-4 mb-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "1 · Pianifica"), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Compito",
+    value: data.pianifica.cosaDevoFare
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Richiesto",
+    value: data.pianifica.cosaVieneChiesto
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "So già",
+    value: data.pianifica.cosaSoGia
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Strategia",
+    value: data.pianifica.comeProcedere
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "L'IA può aiutare con",
+    value: data.pianifica.aiuto
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Voglio fare da solo",
+    value: data.pianifica.personale
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mt-5 mb-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "2 · Orchestra"), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Chiesto all'IA",
+    value: data.orchestra.chiesto
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Perché",
+    value: data.orchestra.perche
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Risposta ricevuta",
+    value: data.orchestra.risposta
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Decisione",
+    value: DECISION_LABELS[data.orchestra.decisione] || data.orchestra.decisione
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Motivo della decisione",
+    value: data.orchestra.motivo
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mt-5 mb-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "3 · Riscontra"), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Fiducia",
+    value: data.verifica.fiducia
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Come ho controllato",
+    value: data.verifica.controllo
+  }), data.verifica.trovato === "si" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Cosa ho trovato",
+    value: data.verifica.cosaTrovato
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Come me ne sono accorto",
+    value: data.verifica.accorto
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Come ho corretto",
+    value: data.verifica.corretto
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mt-5 mb-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "4 · Trasforma"), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Ho tenuto",
+    value: data.trasforma.tenuto
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Ho cambiato",
+    value: data.trasforma.cambiato
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Ho eliminato",
+    value: data.trasforma.eliminato
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Risultato",
+    value: data.trasforma.risultato
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mt-5 mb-1",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "5 · Argomenta"), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Parte autonoma",
+    value: data.rifletti.autonoma
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Momento più utile dell'IA",
+    value: data.rifletti.momentoUtile
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Ho rifiutato/corretto",
+    value: data.rifletti.rifiutato
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Decisione più importante",
+    value: data.rifletti.decisione
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Cosa ho imparato",
+    value: data.rifletti.imparato
+  }), /*#__PURE__*/React.createElement(SummaryRow, {
+    label: "Cosa farei diversamente",
+    value: data.rifletti.diverso
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mt-7 pt-6",
+    style: {
+      borderTop: `1px solid ${COLORS.line}`
+    }
+  }, /*#__PURE__*/React.createElement(Field, {
+    label: "Nota per il docente (facoltativa)"
+  }, /*#__PURE__*/React.createElement(TextArea, {
+    value: data.notaDocente || "",
+    onChange: v => setData(s => ({
+      ...s,
+      notaDocente: v
+    })),
+    rows: 3,
+    placeholder: "Vuoi aggiungere qualcosa prima di consegnare il tuo percorso?"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "text-center italic text-[15px] mt-8",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "«Hai dimostrato di saper governare il processo.»")), /*#__PURE__*/React.createElement("textarea", {
+    ref: hiddenTextRef,
+    readOnly: true,
+    value: buildSummaryText(data),
+    style: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: 1,
+      height: 1,
+      opacity: 0,
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center justify-center gap-3 mt-6 no-print"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => window.open(buildGoogleFormUrl(data), "_blank", "noopener,noreferrer"),
+    className: "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium",
+    style: {
+      background: COLORS.warmGray,
+      color: "#fff"
+    }
+  }, /*#__PURE__*/React.createElement(Send, {
+    size: 16
+  }), " Invia al docente"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleCopy,
+    className: "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium",
+    style: {
+      border: `1px solid ${COLORS.line}`,
+      color: COLORS.warmGray
+    }
+  }, /*#__PURE__*/React.createElement(Copy, {
+    size: 16
+  }), " ", copied ? "Copiato!" : "Copia scheda"), /*#__PURE__*/React.createElement("button", {
+    onClick: onNewJourney,
+    className: "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium",
+    style: {
+      border: `1px solid ${COLORS.line}`,
+      color: COLORS.warmGray
+    }
+  }, /*#__PURE__*/React.createElement(RotateCcw, {
+    size: 16
+  }), " Nuovo percorso")), /*#__PURE__*/React.createElement("p", {
+    className: "text-center text-xs mt-3 no-print",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "\"Invia al docente\" apre il modulo Google già compilato: controlla e premi Invia dentro il modulo per completare la consegna."), copyError && /*#__PURE__*/React.createElement("p", {
+    className: "text-center text-xs mt-3",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Non riesco a copiare automaticamente qui. Seleziona e copia il testo dell'area sopra, oppure prova da un altro browser."));
+}
+
+/* ---------------------------------------------------------
+   QUICK MODE
+--------------------------------------------------------- */
+const QUICK_FIELDS = [{
+  key: "cosa",
+  label: "Cosa devo fare?"
+}, {
+  key: "uso",
+  label: "Come ho utilizzato l'IA?"
+}, {
+  key: "deciso",
+  label: "Cosa ho deciso di utilizzare?"
+}, {
+  key: "verificato",
+  label: "Come ho verificato?"
+}, {
+  key: "imparato",
+  label: "Cosa ho imparato?"
+}];
+function QuickMode({
+  data,
+  quickData,
+  setQuickData,
+  onExit,
+  onFinish
+}) {
+  const [step, setStep] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
+  const hiddenTextRef = useRef(null);
+  const f = QUICK_FIELDS[step];
+  const done = step === QUICK_FIELDS.length;
+  const quickText = QUICK_FIELDS.map(qf => `${qf.label}\n${quickData[qf.key]}`).join("\n\n");
+  const handleCopy = async () => {
+    setCopyError(false);
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(quickText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2200);
+        return;
+      }
+      throw new Error("clipboard API non disponibile");
+    } catch (e) {
+      const ta = hiddenTextRef.current;
+      if (ta) {
+        ta.style.display = "block";
+        ta.focus();
+        ta.select();
+        try {
+          const ok = document.execCommand("copy");
+          ta.style.display = "none";
+          if (ok) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2200);
+            return;
+          }
+        } catch (err) {
+          ta.style.display = "none";
+        }
+      }
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 4000);
+    }
+  };
+  if (done) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "rounded-[28px] p-6 sm:p-9 text-center",
+      style: {
+        background: COLORS.card,
+        boxShadow: "0 2px 24px rgba(91,85,78,0.06)"
+      }
+    }, /*#__PURE__*/React.createElement("h1", {
+      className: "text-2xl font-semibold mb-4",
+      style: {
+        color: COLORS.warmGray,
+        fontFamily: "'Quicksand', sans-serif"
+      }
+    }, "Percorso rapido completato ⚡"), data?.nickname?.name && (() => {
+      const g = NICKNAME_GROUPS.find(gr => gr.key === data.nickname.group);
+      const emoji = getNicknameEmoji(data.nickname.group, data.nickname.name);
+      return /*#__PURE__*/React.createElement("div", {
+        className: "inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-4",
+        style: {
+          background: g ? `${g.color}33` : "rgba(0,0,0,0.04)",
+          border: `1px solid ${g ? g.color : COLORS.line}`
+        }
+      }, emoji && /*#__PURE__*/React.createElement("span", {
+        className: "text-base leading-none"
+      }, emoji), /*#__PURE__*/React.createElement("span", {
+        className: "text-sm font-semibold",
+        style: {
+          color: COLORS.warmGray
+        }
+      }, data.nickname.name), g && /*#__PURE__*/React.createElement("span", {
+        className: "text-xs",
+        style: {
+          color: COLORS.warmGrayLight
+        }
+      }, "· ", g.label));
+    })(), /*#__PURE__*/React.createElement("div", {
+      className: "text-left max-w-md mx-auto mb-6"
+    }, QUICK_FIELDS.map(qf => /*#__PURE__*/React.createElement(SummaryRow, {
+      key: qf.key,
+      label: qf.label,
+      value: quickData[qf.key]
+    }))), /*#__PURE__*/React.createElement("textarea", {
+      ref: hiddenTextRef,
+      readOnly: true,
+      value: quickText,
+      style: {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: 1,
+        height: 1,
+        opacity: 0,
+        display: "none"
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "flex justify-center gap-3"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: handleCopy,
+      className: "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium",
+      style: {
+        border: `1px solid ${COLORS.line}`,
+        color: COLORS.warmGray
+      }
+    }, /*#__PURE__*/React.createElement(Copy, {
+      size: 16
+    }), " ", copied ? "Copiato!" : "Copia scheda"), /*#__PURE__*/React.createElement("button", {
+      onClick: onFinish,
+      className: "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium",
+      style: {
+        background: COLORS.warmGray,
+        color: "#fff"
+      }
+    }, /*#__PURE__*/React.createElement(RotateCcw, {
+      size: 16
+    }), " Torna alla home")), copyError && /*#__PURE__*/React.createElement("p", {
+      className: "text-center text-xs mt-3",
+      style: {
+        color: COLORS.warmGrayLight
+      }
+    }, "Non riesco a copiare automaticamente qui. Prova da un altro browser."));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "rounded-[28px] p-6 sm:p-9",
+    style: {
+      background: COLORS.card,
+      boxShadow: "0 2px 24px rgba(91,85,78,0.06)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1.5 mb-6"
+  }, QUICK_FIELDS.map((_, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "h-1.5 flex-1 rounded-full",
+    style: {
+      background: i <= step ? COLORS.sage : "#EFEAE0"
+    }
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-semibold uppercase tracking-wide mb-2",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Domanda ", step + 1, " di ", QUICK_FIELDS.length), /*#__PURE__*/React.createElement("h1", {
+    className: "text-xl font-semibold mb-6",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, f.label), /*#__PURE__*/React.createElement(TextArea, {
+    value: quickData[f.key],
+    onChange: v => setQuickData(s => ({
+      ...s,
+      [f.key]: v
+    })),
+    rows: 4
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-end gap-2 mt-8 pt-6",
+    style: {
+      borderTop: `1px solid ${COLORS.line}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between w-full"
+  }, /*#__PURE__*/React.createElement(GhostButton, {
+    onClick: () => step === 0 ? onExit() : setStep(s => s - 1),
+    icon: ArrowLeft
+  }, step === 0 ? "Home" : "Indietro"), /*#__PURE__*/React.createElement(PrimaryButton, {
+    onClick: () => setStep(s => s + 1),
+    icon: ArrowRight,
+    disabled: !quickData[f.key].trim()
+  }, step === QUICK_FIELDS.length - 1 ? "Concludi" : "Continua")), !quickData[f.key].trim() && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Rispondi per continuare.")));
+}
+
+/* ---------------------------------------------------------
+   CLEAR DATA CONFIRM
+--------------------------------------------------------- */
+function ClearConfirm({
+  onCancel,
+  onConfirm
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-50 flex items-center justify-center p-4",
+    style: {
+      background: "rgba(91,85,78,0.35)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-6 max-w-sm w-full",
+    style: {
+      background: COLORS.card
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] font-medium mb-2",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Cancellare il tuo lavoro?"), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm mb-5",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Tutte le risposte inserite andranno perse. Questa azione non si può annullare."), /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-end gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onCancel,
+    className: "rounded-full px-4 py-2 text-sm font-medium",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Annulla"), /*#__PURE__*/React.createElement("button", {
+    onClick: onConfirm,
+    className: "rounded-full px-4 py-2 text-sm font-medium text-white",
+    style: {
+      background: "#B5766A"
+    }
+  }, "Cancella"))));
+}
+function DemoPicker({
+  onPick,
+  onClose
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-50 flex items-center justify-center p-4",
+    style: {
+      background: "rgba(91,85,78,0.35)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rounded-3xl p-6 sm:p-7 max-w-md w-full",
+    style: {
+      background: COLORS.card
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] font-semibold mb-1",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "Scegli un ambito"), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm mb-5",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Ogni volta che scegli un ambito viene generato un caso diverso."), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 gap-2.5"
+  }, DOMAIN_META.map(dm => /*#__PURE__*/React.createElement("button", {
+    key: dm.key,
+    onClick: () => onPick(dm.key),
+    className: "flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-transform active:scale-[0.98]",
+    style: {
+      background: "rgba(0,0,0,0.02)",
+      border: `1px solid ${COLORS.line}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl"
+  }, dm.icon), /*#__PURE__*/React.createElement("span", {
+    className: "text-[15px] font-medium",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, dm.label)))), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    className: "mt-5 text-sm underline underline-offset-2 mx-auto block",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Annulla")));
+}
+
+/* ---------------------------------------------------------
+   NICKNAME PICKER
+--------------------------------------------------------- */
+function NicknamePicker({
+  data,
+  setData,
+  onBack,
+  onNext
+}) {
+  const nick = data.nickname || {
+    group: null,
+    name: ""
+  };
+  const [openGroup, setOpenGroup] = useState(nick.group);
+  const chooseGroup = key => setOpenGroup(key);
+  const chooseName = (groupKey, name) => setData(s => ({
+    ...s,
+    nickname: {
+      group: groupKey,
+      name
+    }
+  }));
+  const activeGroup = NICKNAME_GROUPS.find(g => g.key === openGroup);
+  return /*#__PURE__*/React.createElement(Screen, {
+    title: "Scegli il tuo nickname",
+    subtitle: "«Un nome di squadra per il tuo percorso.»",
+    onBack: onBack,
+    onNext: onNext
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[15px] leading-relaxed mb-6",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Il tuo insegnante ha preparato dei gruppi di nickname. Scegline uno, poi scegli il tuo nome dentro il gruppo. È facoltativo: puoi anche continuare senza sceglierlo."), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6"
+  }, NICKNAME_GROUPS.map(g => {
+    const Icon = g.icon;
+    const active = openGroup === g.key;
+    return /*#__PURE__*/React.createElement("button", {
+      key: g.key,
+      onClick: () => chooseGroup(g.key),
+      className: "flex flex-col items-center gap-2 rounded-2xl py-4 px-2 transition-transform active:scale-[0.97]",
+      style: {
+        background: active ? g.color : "rgba(0,0,0,0.02)",
+        border: `1px solid ${active ? g.color : COLORS.line}`
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      size: 20,
+      color: active ? "#fff" : COLORS.warmGray
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "text-sm font-medium",
+      style: {
+        color: active ? "#fff" : COLORS.warmGray
+      }
+    }, g.label));
+  })), activeGroup && /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-4 mb-2",
+    style: {
+      background: `${activeGroup.color}22`
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-medium mb-3",
+    style: {
+      color: COLORS.warmGray
+    }
+  }, "Scegli il tuo nome tra gli ", activeGroup.label), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap gap-2"
+  }, activeGroup.names.map(n => {
+    const selected = nick.group === activeGroup.key && nick.name === n.name;
+    return /*#__PURE__*/React.createElement("button", {
+      key: n.name,
+      onClick: () => chooseName(activeGroup.key, n.name),
+      className: "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
+      style: {
+        background: selected ? COLORS.warmGray : "#FEFDFB",
+        color: selected ? "#fff" : COLORS.warmGray,
+        border: `1px solid ${selected ? COLORS.warmGray : COLORS.line}`
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-base leading-none"
+    }, n.emoji), n.name, selected && /*#__PURE__*/React.createElement(Check, {
+      size: 12,
+      strokeWidth: 3
+    }));
+  }))), nick.name && /*#__PURE__*/React.createElement("p", {
+    className: "text-sm mt-5",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Nickname scelto: ", /*#__PURE__*/React.createElement("span", {
+    className: "text-base align-middle"
+  }, getNicknameEmoji(nick.group, nick.name)), " ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: COLORS.warmGray
+    }
+  }, nick.name)));
+}
+
+/* ---------------------------------------------------------
+   ROOT APP
+--------------------------------------------------------- */
+function App() {
+  const [screen, setScreen] = useState("home"); // home | nickname | guided | selfeval | summary | quick
+  const [pendingMode, setPendingMode] = useState("guided"); // where nickname screen leads next
+  const [step, setStep] = useState(0);
+  const [doneSteps, setDoneSteps] = useState([]);
+  const [data, setData] = useState(emptyData());
+  const [quickData, setQuickData] = useState(emptyQuick());
+  const [showClear, setShowClear] = useState(false);
+  const [showDemoPicker, setShowDemoPicker] = useState(false);
+  const [hasProgress, setHasProgress] = useState(false);
+  const lastDemoIndexRef = useRef({});
+  useEffect(() => {
+    // track whether there's meaningful in-session progress, to offer a lightweight resume affordance
+    const touched = JSON.stringify(data) !== JSON.stringify(emptyData());
+    setHasProgress(touched);
+  }, [data]);
+  const goNext = () => {
+    setDoneSteps(s => s.includes(step) ? s : [...s, step]);
+    if (step < 4) setStep(s => s + 1);else setScreen("selfeval");
+  };
+  const goBack = () => {
+    if (step === 0) setScreen("nickname");else setStep(s => s - 1);
+  };
+  const resetAll = () => {
+    setData(emptyData());
+    setQuickData(emptyQuick());
+    setStep(0);
+    setDoneSteps([]);
+    setScreen("home");
+  };
+  const loadDemo = domainKey => {
+    const variants = DEMO_SETS[domainKey];
+    let idx = Math.floor(Math.random() * variants.length);
+    if (variants.length > 1 && idx === lastDemoIndexRef.current[domainKey]) {
+      idx = (idx + 1) % variants.length;
+    }
+    lastDemoIndexRef.current[domainKey] = idx;
+    setData({
+      ...emptyData(),
+      ...variants[idx]
+    });
+    setDoneSteps([0, 1, 2, 3, 4]);
+    setStep(0);
+    setShowDemoPicker(false);
+    setScreen("guided");
+  };
+  const nav = {
+    onBack: goBack,
+    onNext: goNext
+  };
+  const stepProps = {
+    data,
+    setData,
+    ...nav
+  };
+  const goFromNickname = () => {
+    if (pendingMode === "quick") setScreen("quick");else {
+      setScreen("guided");
+      setStep(0);
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "min-h-screen w-full",
+    style: {
+      background: COLORS.cream,
+      fontFamily: "'Inter', sans-serif"
+    }
+  }, /*#__PURE__*/React.createElement("style", null, `
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+        @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to {opacity:1; transform:none;} }
+        textarea::placeholder { color: #B7AFA3; }
+        @media print {
+          .no-print { display: none !important; }
+          body { background: white !important; }
+        }
+      `), /*#__PURE__*/React.createElement("header", {
+    className: "sticky top-0 z-10 backdrop-blur-sm py-4 px-4 no-print",
+    style: {
+      background: "rgba(250,246,240,0.85)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[720px] mx-auto flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => screen !== "home" && setScreen("home"),
+    className: "text-sm font-semibold tracking-wide",
+    style: {
+      color: COLORS.warmGray,
+      fontFamily: "'Quicksand', sans-serif"
+    }
+  }, "Alethe", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: COLORS.dustBlue
+    }
+  }, "IA")), hasProgress && screen !== "home" && /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowClear(true),
+    className: "text-xs underline underline-offset-2",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, "Cancella il mio lavoro")), screen === "guided" && /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[720px] mx-auto mt-4"
+  }, /*#__PURE__*/React.createElement(ProgressBar, {
+    step: step,
+    done: doneSteps
+  }))), /*#__PURE__*/React.createElement("main", {
+    className: "max-w-[720px] mx-auto px-4 pb-16 pt-4"
+  }, screen === "home" && /*#__PURE__*/React.createElement(Home, {
+    onStart: () => {
+      setPendingMode("guided");
+      setScreen("nickname");
+    },
+    onQuick: () => {
+      setPendingMode("quick");
+      setScreen("nickname");
+    },
+    onDemo: () => setShowDemoPicker(true),
+    resumeAvailable: hasProgress,
+    onResume: () => setScreen(doneSteps.length >= 5 ? "selfeval" : "guided"),
+    onRestartFresh: resetAll
+  }), screen === "nickname" && /*#__PURE__*/React.createElement(NicknamePicker, {
+    data: data,
+    setData: setData,
+    onBack: () => setScreen("home"),
+    onNext: goFromNickname
+  }), screen === "guided" && step === 0 && /*#__PURE__*/React.createElement(StepPianifica, stepProps), screen === "guided" && step === 1 && /*#__PURE__*/React.createElement(StepOrchestra, stepProps), screen === "guided" && step === 2 && /*#__PURE__*/React.createElement(StepVerifica, stepProps), screen === "guided" && step === 3 && /*#__PURE__*/React.createElement(StepTrasforma, stepProps), screen === "guided" && step === 4 && /*#__PURE__*/React.createElement(StepRifletti, stepProps), screen === "selfeval" && /*#__PURE__*/React.createElement(SelfEval, {
+    data: data,
+    setData: setData,
+    onBack: () => {
+      setScreen("guided");
+      setStep(4);
+    },
+    onNext: () => setScreen("summary")
+  }), screen === "summary" && /*#__PURE__*/React.createElement(FinalSummary, {
+    data: data,
+    setData: setData,
+    onNewJourney: resetAll
+  }), screen === "quick" && /*#__PURE__*/React.createElement(QuickMode, {
+    data: data,
+    quickData: quickData,
+    setQuickData: setQuickData,
+    onExit: () => setScreen("nickname"),
+    onFinish: () => {
+      setQuickData(emptyQuick());
+      setScreen("home");
+    }
+  })), showClear && /*#__PURE__*/React.createElement(ClearConfirm, {
+    onCancel: () => setShowClear(false),
+    onConfirm: () => {
+      setShowClear(false);
+      resetAll();
+    }
+  }), showDemoPicker && /*#__PURE__*/React.createElement(DemoPicker, {
+    onPick: loadDemo,
+    onClose: () => setShowDemoPicker(false)
+  }), /*#__PURE__*/React.createElement("footer", {
+    className: "text-center text-xs pb-8 no-print",
+    style: {
+      color: COLORS.warmGrayLight
+    }
+  }, /*#__PURE__*/React.createElement("p", null, "I tuoi dati restano solo in questa sessione, nel tuo browser. Nessuna informazione viene inviata altrove."), /*#__PURE__*/React.createElement("p", {
+    className: "mt-2 opacity-70"
+  }, "© 2026 Francesco Picca")));
+}
+const rootEl = document.getElementById("root");
+const root = ReactDOM.createRoot(rootEl);
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
